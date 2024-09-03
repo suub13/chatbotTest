@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&family=Noto+Sans+KR:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap');
+
+body {
+    font-family: "Noto Sans KR", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+header {
+    display: flex;
+    justify-content: left;  /* h2 태그를 가운데에 위치시키도록 설정 */
+    align-items: center;
+    padding: 20px;
+    /* background-color: #333; #FDDEAC*/
+    background-color: white;
+
+    width: 100%;  /* 페이지 가로 길이를 꽉 채우도록 설정 */
+    box-sizing: border-box;  /* padding을 포함하여 width를 계산 */
+    position: relative;  /* auth-buttons의 위치를 기준으로 설정 */
+    /* border: 3px solid #FDBB50;*/
+}
+
+header h2 {
+    color: #F99704;
+    margin: 0;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+    position: absolute;  /* 절대 위치 */
+    right: 20px;  /* 오른쪽 끝으로 이동 */
+    align-items: center;  /* 하단 정렬 */
+}
+
+.auth-buttons p {
+    font-size: 16px;  /* 폰트 크기 설정 */
+    margin: 0;  /* 기본 여백 제거 */
+}
+
+.auth-buttons a,
+.auth-buttons button {
+    background-color: #F99704;
+    color: white;
+    padding: 10px 10px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 70px;
+
+}
+
+.auth-buttons .auth-link {
+    /* background-color: #666; */
+    color: white;
+
+}
+
+.auth-buttons a:hover,
+.auth-buttons button:hover {
+    background-color: #666;
+    color:white;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 80%;
+    max-width: 400px;
+    min-height: 700px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    text-align: center;
+}
+
+#separateBody {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#main-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#chat-container {
+    width: 100%;
+    max-width: 350px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0px;
+}
+
+#chat-box {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+}
+
+#messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ccc;
+    background-color: #e9ecef;
+    display: flex;
+    flex-direction: column;
+}
+
+#input-container {
+    display: flex;
+    border-top: 1px solid #ccc;
+    padding: 5px;
+    background-color: white;
+    align-items: flex-start; /* Align items at the top */
+}
+
+#chat-input {
+    font-family: "Noto Sans KR", sans-serif;
+    border: none;
+    padding: 10px;
+    flex: 1;
+    box-sizing: border-box;
+    resize: none;
+    height: 50px;
+    max-height: 100px; /* Maximum height */
+    overflow-y: hidden; /* Add vertical scroll */
+    font-size: 13px;
+}
+
+#send-button {
+    width: 35px;
+    height: 33px;
+    border: none;
+    background-color: #C9D2FF;
+    color: white;
+    cursor: pointer;
+    margin: 10px 5px;
+    border-radius: 8px;
+    font-size: 22px;
+    padding: 0px;
+}
+
+#send-button:hover {
+    background-color: #b3bce7;
+}
+
+#send-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#chat-header {
+    display: flex;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    padding: 0 10px; /* 좌우 여백 */
+    height: 50px;
+    border-bottom: 1px solid #ccc; /* 구분선 추가 */
+    position: relative; /* 자식 요소의 절대 위치 지정에 필요 */
+}
+
+#chat-title {
+    position: absolute;
+    left: 20%; /* 부모의 중앙 위치로 이동 */
+    transform: translateX(-50%); /* 중앙으로 위치 이동 */
+    font-weight: bold; /* 굵은 글꼴 */
+    font-size: 20px;
+    color: #424242;
+}
+
+#reload-button {
+    height: 30px;
+
+    position: absolute;
+    right: 10px; /* 부모의 오른쪽 끝에 위치 */
+    /* Reload 버튼 스타일 */
+    color: #aeb7bf;
+    border: 2px solid #aeb7bf;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: white;
+    font-size: 20px;
+}
+
+#reload-button:hover {
+    background-color: #aeb7bf;
+    border: 2px solid #aeb7bf;
+    color: white;
+}
+
+
+.message {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 15px;
+    word-wrap: break-word;
+    max-width: 80%;
+    clear: both;
+}
+
+.user {
+    align-self: flex-end;
+    background-color: #C9D2FF;
+    text-align: left;
+    color: black;
+    font-size: 13px;
+}
+
+.bot {
+    align-self: flex-start;
+    background-color: #e2e3e5;
+    text-align: left;
+    color: black;
+    font-size: 13px;
+}
+

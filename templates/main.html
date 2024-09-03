@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR & LLM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<!--    <header>-->
+<!--        <h2 onclick="window.location.href='/'">민원 Chatbot</h2>-->
+<!--        <div class="auth-buttons">-->
+<!--            {% if username %}-->
+<!--                <p class="welcome-text">{{ username }}</p>-->
+<!--                <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>-->
+<!--            {% else %}-->
+<!--                <button class="auth-button" onclick="window.location.href='/login'">Login</button>-->
+<!--                <button class="auth-button" onclick="window.location.href='/register'">Register</button>-->
+<!--            {% endif %}-->
+<!--        </div>-->
+<!--    </header>-->
+    <div class="container" id="separateBody">
+        <div id="chat-container">
+            <div id="chat-box">
+                <div id="chat-header">
+                    <div id="chat-title">AI Chatbot</div>
+                    <button id="reload-button">↺</button>
+                </div>
+                <div id="messages"></div>
+                <div id="input-container">
+                    <textarea id="chat-input" placeholder="메시지를 입력하세요..."></textarea>
+                    <button id="send-button">▲</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="static/script.js"></script>
+</body>
+</html>
