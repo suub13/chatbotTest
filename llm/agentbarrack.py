@@ -32,6 +32,7 @@ class AgentBarrack():
         self.agent = None
         self.agent_executor = None
         self.input = ''
+        self.retriever_tool = None
 
     def make_tools_from_functions(self, functions: list, names: list, descriptions: list):
         from langchain.tools import StructuredTool
@@ -53,11 +54,11 @@ class AgentBarrack():
 
         loader = DirectoryLoader(path=dir_path, glob='*.'+extension, show_progress=True)
         data = loader.load()
-        # print(data)
+
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=20)
         splits = text_splitter.split_documents(data)
 
-        # print(splits)
+        print(splits)
         vectorstore = FAISS.from_documents(documents=splits, embedding=embedding)
         retriever = vectorstore.as_retriever(search_type="similarity")
         retriever_tool = create_retriever_tool(
@@ -65,6 +66,7 @@ class AgentBarrack():
             name=name,
             description=description,
             )
+        self.retriever_tool = retriever_tool
         self.tools.append(retriever_tool)
 
     def make_tool_from_CsvRetriever(self, dir_path, name: str, description: str, embedding=OpenAIEmbeddings()):
@@ -91,7 +93,6 @@ class AgentBarrack():
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=20)
         splits = text_splitter.split_documents(data)
         vectorstore = FAISS.from_documents(documents=splits, embedding=embedding)
-        print(splits)
 
         # vectorstore = FAISS.from_documents(documents=data, embedding=embedding)
         retriever = vectorstore.as_retriever(search_type="similarity")
@@ -179,11 +180,11 @@ class AgentBarrack():
                 "chat_history": lambda x: x["chat_history"],
             }
             | self.prompt
-            | self.llm.bind_tools(self.tools)
+            | self.llm.bind_tools([self.retriever_tool])
             | OpenAIToolsAgentOutputParser()
             )
         
-        self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=True)
+        self.agent_executor = AgentExecutor(agent=self.agent, tools=[self.retriever_tool], verbose=True)
     
     def invoke_agent(self, input):
         self.input = input
@@ -192,6 +193,12 @@ class AgentBarrack():
             HumanMessage(content=input),
             AIMessage(content=result["output"]),
         ])
+
+        # # Retrieved data에서 응답이 생성되었는지 확인
+        # if "reference" not in result["output"]:
+        #     result["output"] = "The answer is not available in the provided documents."
+        print(result)
+
         return result['output']
 
 

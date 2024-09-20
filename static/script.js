@@ -53,7 +53,9 @@ function displayMessage(sender, message) {
     const messagesContainer = document.getElementById('messages');
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}`;
-    messageElement.textContent = message;
+//    messageElement.textContent = message;
+    // Replace \n with <br> to handle line breaks
+    messageElement.innerHTML = message.replace(/\n/g, '<br>');
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
@@ -70,7 +72,7 @@ function getChatbotResponse(userMessage) {
     .then(response => response.json())
     .then(data => {
         const botResponse = data.response;
-//        console.log('Result:', botResponse); // 결과 출력
+        console.log('Result:', botResponse); // 결과 출력
         displayMessage('bot', botResponse);
         toggleInput(true);
 

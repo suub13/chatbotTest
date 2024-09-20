@@ -20,13 +20,17 @@ app.config['MYSQL_DB'] = 'mywebsite'
 mysql_db = MySQL(app)
 CORS(app)
 
+chat_agent = None
 
 def restart_agent():
     agent = agentbarrack.AgentBarrack(
-        prompt='당신은 매우 친절한 민원 처리 상담사입니다. 질문에 대답하기 위해 필요한 정보가 있다면 질문하며 정보를 얻어 답변을 생성하세요.'
-               '숫자와 점이외의 특수문자는 사용하지 않고 대답해야 하며 제공된 컨텍스트에서 필요한 내용을 찾아 답변을 생성하고,'
-               ' 컨텍스트에서 답을 추론할 수 없는 경우 대답하지 마세요.',
-        model_id='gpt-4-turbo'
+        # prompt='당신은 매우 친절한 민원 처리 상담사입니다. 질문에 대답하기 위해 필요한 정보가 있다면 질문하며 정보를 얻어 답변을 생성하세요.'
+        #        '숫자와 점이외의 특수문자는 사용하지 않고 대답해야 하며 제공된 컨텍스트에서 필요한 내용을 찾아 답변을 생성하고,'
+        #        ' 컨텍스트에서 답을 추론할 수 없는 경우 대답하지 마세요.',
+        prompt="You are a helpful assistant. Please answer all questions based strictly on the information provided in the referenced documents. "
+               "If the answer is not in the documents, respond with 'I don't know' or 'The answer is not available in the provided documents.'"
+               "If the answer is not based on the documents provided, please do not provide the answers.",
+        model_id='gpt-4o'
         )
     agent.make_tool_from_DocRetriever(dir_path='./assets',
                                       name='solution-tools',
@@ -36,38 +40,38 @@ def restart_agent():
     return agent
 
 
-chat_agent = restart_agent()
 
 
-def run_sql_script(script_path):
-    with open(script_path, 'r') as file:
-        sql_script = file.read()
 
-    conn = mysql.connector.connect(
-        host=app.config['MYSQL_HOST'],
-        user=app.config['MYSQL_USER'],
-        password=app.config['MYSQL_PASSWORD']
-    )
-
-    cursor = conn.cursor()
-    try:
-        for result in cursor.execute(sql_script, multi=True):
-            if result.with_rows:
-                print("Rows produced by statement '{}':".format(result.statement))
-                print(result.fetchall())
-            else:
-                print("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
-        conn.commit()
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        conn.rollback()
-    finally:
-        cursor.close()
-        conn.close()
-
-
-# 애플리케이션 시작 시 SQL 스크립트 실행
-run_sql_script('setup.sql')
+# def run_sql_script(script_path):
+#     with open(script_path, 'r') as file:
+#         sql_script = file.read()
+#
+#     conn = mysql.connector.connect(
+#         host=app.config['MYSQL_HOST'],
+#         user=app.config['MYSQL_USER'],
+#         password=app.config['MYSQL_PASSWORD']
+#     )
+#
+#     cursor = conn.cursor()
+#     try:
+#         for result in cursor.execute(sql_script, multi=True):
+#             if result.with_rows:
+#                 print("Rows produced by statement '{}':".format(result.statement))
+#                 print(result.fetchall())
+#             else:
+#                 print("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
+#         conn.commit()
+#     except mysql.connector.Error as err:
+#         print(f"Error: {err}")
+#         conn.rollback()
+#     finally:
+#         cursor.close()
+#         conn.close()
+#
+#
+# # 애플리케이션 시작 시 SQL 스크립트 실행
+# run_sql_script('setup.sql')
 
 
 @app.route('/')
@@ -181,5 +185,7 @@ def chat_reload():
 
 
 if __name__ == '__main__':
+    chat_agent = restart_agent()
     app.run(debug=True)
+
 
