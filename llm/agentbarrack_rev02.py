@@ -9,15 +9,26 @@ from langchain.agents import AgentExecutor
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-# 이건 huggingface 모델 사용을 위한 코드
+# 내가 추가한 내용
+from langchain.chains import LLMChain
 
 dotenv.load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-from huggingface_hub import login
 
-# 액세스 토큰으로 로그인
-login(os.environ["HUGGINGFACE_HUB_TOKEN"], add_to_git_credential=True)
+'''
+agent.make_tool_from_DocRetriever(
+    doc_path='./assets/qna.txt',
+    name='qna-relevant_statutory_provisions-tool',
+    description='민원 질문에 대한 해결방법과 근거법령을 제시해야할 때 유용합니다.',
+    )
+    
+agent.make_tool_from_DocRetriever(
+    doc_path='/Users/nyagu/Documents/workSpace/PoC/assets/link.txt',
+    name='statute_links-tool',
+    description='근거법령의 link를 제시해야할 때 유용합니다.',
+    )
+'''
 
 class AgentBarrack():
     def __init__(self,
@@ -25,31 +36,37 @@ class AgentBarrack():
                  prompt = '당신은 매우 친절한 챗봇 도우미입니다. 문장의 주어에 주의하며 대답합니다.',
                  tools = []
                  ):
-        if 'gpt' in model_id:
-            self.llm = ChatOpenAI(model=model_id, temperature=0)
-        else:
-            from langchain_huggingface import ChatHuggingFace
-            from langchain_huggingface import HuggingFacePipeline
-
-            hf = HuggingFacePipeline.from_model_id(
-                model_id=model_id,
-                task="text-generation",
-                pipeline_kwargs={"max_new_tokens": 300},
-                )
-
-            self.llm = ChatHuggingFace(llm=hf)
-        
+        self.llm = ChatOpenAI(model=model_id, temperature=0)
         self.tools = tools
+
         self.chat_history = []
-        self.prompt = ChatPromptTemplate.from_messages([
+        # self.prompt -> self.prompt_template으로 변경
+        self.prompt_template = ChatPromptTemplate.from_messages([
             ("system", prompt),
             MessagesPlaceholder(variable_name="chat_history"),
             ("user", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
             ])
-        self.agent = None
-        self.agent_executor = None
+        # 내가 추가한 내용
+        self.prompt_chain = LLMChain(llm=self.llm, prompt=self.prompt_template)
+
+        self.make_tool_from_DocRetriever(
+            doc_path='./assets/qna.txt',
+            name='qna-relevant_statutory_provisions-tool',
+            description='민원 질문에 대한 해결방법과 근거법령을 제시해야할 때 유용합니다.',
+            )
+
+        self.make_tool_from_DocRetriever(
+            doc_path='./assets/link.txt',
+            name='statute_links-tool',
+            description='근거법령의 link를 제시해야할 때 유용합니다.',
+            )
+
+
+        self.agent = self.prompt_chain.bind_tools(self.tools)
+        self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=False)
         self.input = ''
+        self.retriever_tool = None
 
     def make_tools_from_functions(self, functions: list, names: list, descriptions: list):
         from langchain.tools import StructuredTool
@@ -63,15 +80,22 @@ class AgentBarrack():
                 )
             )
         
-    def make_tool_from_DocRetriever(self, dir_path, name: str, description: str, extension='txt', embedding=OpenAIEmbeddings()):
-        from langchain_community.document_loaders import DirectoryLoader
+    def make_tool_from_DocRetriever(
+            self, 
+            doc_path, 
+            name: str, 
+            description: str,
+            chunk_size=300,
+            chunk_overlap=20,
+            embedding=OpenAIEmbeddings()):
+
+        from langchain_community.document_loaders import TextLoader
         from langchain.text_splitter import RecursiveCharacterTextSplitter
         from langchain_community.vectorstores import FAISS
         from langchain.tools.retriever import create_retriever_tool
 
-        loader = DirectoryLoader(path=dir_path, glob='*.'+extension, show_progress=True)
-        data = loader.load()
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=20)
+        data = TextLoader(doc_path).load()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         splits = text_splitter.split_documents(data)
         vectorstore = FAISS.from_documents(documents=splits, embedding=embedding)
         retriever = vectorstore.as_retriever(search_type="similarity")
@@ -79,47 +103,12 @@ class AgentBarrack():
             retriever,
             name=name,
             description=description,
+            # return_direct=True,
+            # verbose=True,
             )
         self.tools.append(retriever_tool)
 
-    # def make_tool_from_KGChain(self,
-    #                            source_text,
-    #                            name='',
-    #                            description='마이크로 서비스, 종속성 또는 할당된 것에 대한 질문에 답해야 할 때 유용합니다. 작업 수 계산 등과 같은 모든 종류의 집계에도 유용합니다.',
-    #                            model_name='gpt-4-turbo',
-    #                            NEO4J_URI=os.getenv('NEO4J_URI'), 
-    #                            NEO4J_USERNAME=os.getenv('NEO4J_USERNAME'), 
-    #                            NEO4J_PASSWORD=os.getenv('NEO4J_PASSWORD')):
-        
-    #     from langchain_experimental.graph_transformers import LLMGraphTransformer
-    #     from langchain_core.documents import Document
-    #     from langchain_community.graphs import Neo4jGraph
-    #     from langchain.chains import GraphCypherQAChain
-    #     from langchain.agents import Tool
 
-    #     llm_transformer = LLMGraphTransformer(llm=ChatOpenAI(temperature=0, model_name=model_name))
-
-    #     documents = [Document(page_content=source_text)]
-    #     graph_documents = llm_transformer.convert_to_graph_documents(documents)
-
-    #     knowledge_graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
-    #     knowledge_graph.add_graph_documents(graph_documents)
-
-    #     cypher_chain = GraphCypherQAChain.from_llm(
-    #         cypher_llm = ChatOpenAI(temperature=0, model_name=model_name),
-    #         qa_llm = ChatOpenAI(temperature=0),
-    #         graph=knowledge_graph,
-    #         verbose=True)
-        
-    #     self.tools.append(
-    #         Tool(
-    #             name=name,
-    #             func=cypher_chain.invoke,
-    #             description=description
-    #         ))
-
-    #     return graph_documents
-        
     def make_agent(self):
         ### 반드시 tools가 선행되어 있어야함 ###
         self.agent = (
@@ -148,4 +137,5 @@ class AgentBarrack():
 
 
 if __name__ == '__main__':
+
     print('class AgentBarraack')

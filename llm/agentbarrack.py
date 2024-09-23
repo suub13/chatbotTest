@@ -45,91 +45,37 @@ class AgentBarrack():
                 description=desc,
                 )
             )
-        
-    def make_tool_from_DocRetriever(self, dir_path, name: str, description: str, extension='txt', embedding=OpenAIEmbeddings()):
-        from langchain_community.document_loaders import DirectoryLoader
+        from langchain.agents import AgentExecutor, create_react_agent
+        create_react_agent
+    def make_tool_from_DocRetriever(
+            self, 
+            doc_path, 
+            name: str, 
+            description: str,
+            chunk_size=500,
+            chunk_overlap=30,
+            embedding=OpenAIEmbeddings()):
+
+        from langchain_community.document_loaders import TextLoader
         from langchain.text_splitter import RecursiveCharacterTextSplitter
         from langchain_community.vectorstores import FAISS
         from langchain.tools.retriever import create_retriever_tool
 
-        loader = DirectoryLoader(path=dir_path, glob='*.'+extension, show_progress=True)
-        data = loader.load()
-
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=20)
-        splits = text_splitter.split_documents(data)
-
-        print(splits)
-        vectorstore = FAISS.from_documents(documents=splits, embedding=embedding)
-        retriever = vectorstore.as_retriever(search_type="similarity")
-        retriever_tool = create_retriever_tool(
-            retriever,
-            name=name,
-            description=description,
-            )
-        self.retriever_tool = retriever_tool
-        self.tools.append(retriever_tool)
-
-    def make_tool_from_CsvRetriever(self, dir_path, name: str, description: str, embedding=OpenAIEmbeddings()):
-        import pandas as pd
-        from langchain_community.document_loaders.dataframe import DataFrameLoader
-        from langchain_community.vectorstores import FAISS
-        from langchain.tools.retriever import create_retriever_tool
-
-        # csv파일 path로 변경해야함.
-        df = pd.read_csv("./images/gov_faq_data.csv", index_col=0)
-        df['combined_content'] = "질문: " + df['question'] + " 답변: " + df['answer']
-
-        # category, question, answer, links 삭제하고, combined_content만 유지
-        df = df.drop(columns=['category','question', 'answer', 'links'])
-
-        loader = DataFrameLoader(
-            data_frame=df,
-            page_content_column="combined_content"
-            )
-        data = loader.load()
-        # print(data)
-
-        from langchain.text_splitter import RecursiveCharacterTextSplitter
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=20)
+        data = TextLoader(doc_path, encoding='utf-8').load()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         splits = text_splitter.split_documents(data)
         vectorstore = FAISS.from_documents(documents=splits, embedding=embedding)
-
-        # vectorstore = FAISS.from_documents(documents=data, embedding=embedding)
         retriever = vectorstore.as_retriever(search_type="similarity")
         retriever_tool = create_retriever_tool(
             retriever,
             name=name,
             description=description,
+            # return_direct=True,
+            # verbose=True,
             )
         self.tools.append(retriever_tool)
 
-    def make_tool_from_JsonlRetriever(self, jsonl_path, name: str, description: str, embedding=OpenAIEmbeddings()):
-        from langchain_community.document_loaders import JSONLoader
-        from langchain_community.vectorstores import FAISS
-        from langchain.tools.retriever import create_retriever_tool
 
-        def metadata_func(record: dict, metadata: dict) -> dict:
-            metadata["question"] = record.get("question")
-            metadata["answer"] = record.get("answer")
-            return metadata
-
-        loader = JSONLoader(
-            file_path=jsonl_path, 
-            jq_schema='.', 
-            json_lines=True,
-            text_content=False,
-            content_key="content",
-            metadata_func=metadata_func, 
-            )
-        data = loader.load()
-        vectorstore = FAISS.from_documents(documents=data, embedding=embedding)
-        retriever = vectorstore.as_retriever(search_type="similarity")
-        retriever_tool = create_retriever_tool(
-            retriever,
-            name=name,
-            description=description,
-            )
-        self.tools.append(retriever_tool)
 
     # def make_tool_from_KGChain(self,
     #                            source_text,
@@ -180,11 +126,11 @@ class AgentBarrack():
                 "chat_history": lambda x: x["chat_history"],
             }
             | self.prompt
-            | self.llm.bind_tools([self.retriever_tool])
+            | self.llm.bind_tools(self.tools)
             | OpenAIToolsAgentOutputParser()
             )
         
-        self.agent_executor = AgentExecutor(agent=self.agent, tools=[self.retriever_tool], verbose=True)
+        self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=True)
     
     def invoke_agent(self, input):
         self.input = input
@@ -193,12 +139,6 @@ class AgentBarrack():
             HumanMessage(content=input),
             AIMessage(content=result["output"]),
         ])
-
-        # # Retrieved data에서 응답이 생성되었는지 확인
-        # if "reference" not in result["output"]:
-        #     result["output"] = "The answer is not available in the provided documents."
-        print(result)
-
         return result['output']
 
 
