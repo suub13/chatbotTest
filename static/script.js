@@ -10,47 +10,119 @@ function initializeChatbot() {
 }
 
 function setupEventListeners() {
-    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('send-button1').addEventListener('click', sendMessage1);
+    document.getElementById('send-button2').addEventListener('click', sendMessage2);
+    document.getElementById('send-button3').addEventListener('click', sendMessage3);
+
     // 이건 'Enter' 버튼을 누르면 button click과 같은 기능을 함.
-    document.getElementById('chat-input').addEventListener('keydown', handleKeyDown);
-    document.getElementById('reload-button').addEventListener('click', reloadChat);
+    document.getElementById('chat-input1').addEventListener('keydown', handleKeyDown1);
+    document.getElementById('chat-input2').addEventListener('keydown', handleKeyDown2);
+    document.getElementById('chat-input3').addEventListener('keydown', handleKeyDown3);
+
+    document.getElementById('reload-button1').addEventListener('click', reloadChat1);
+    document.getElementById('reload-button2').addEventListener('click', reloadChat2);
+    document.getElementById('reload-button3').addEventListener('click', reloadChat3);
+
 }
 
-function handleKeyDown(event) {
+function handleKeyDown1(event) {
     if (event.key === 'Enter') {
-        sendMessage();
+        sendMessage1();
     }
 }
 
-function sendMessage() {
-    const inputField = document.getElementById('chat-input');
+function handleKeyDown2(event) {
+    if (event.key === 'Enter') {
+        sendMessage2();
+    }
+}
+
+function handleKeyDown3(event) {
+    if (event.key === 'Enter') {
+        sendMessage3();
+    }
+}
+
+function sendMessage1() {
+    const inputField = document.getElementById('chat-input1');
     const message = inputField.value.trim();
     if (message !== '') {
-        displayMessage('user', message);
+        displayMessage1('user', message);
         // 메시지를 messageHistory에 저장
 //        messageHistory.push({ sender: 'user', text: message });
         // inputField 리셋
         inputField.value = '';
         // 챗봇이 응답을 생성하는 중간에 사용자가 다른 질문을 할 수 없게 막는 기능
-        toggleInput(false);
-        getChatbotResponse(message);
+        toggleInput1(false);
+        getChatbotResponse1(message);
     }
 }
 
-async function reloadChat() {
+function sendMessage2() {
+    const inputField = document.getElementById('chat-input2');
+    const message = inputField.value.trim();
+    if (message !== '') {
+        displayMessage2('user', message);
+        // 메시지를 messageHistory에 저장
+//        messageHistory.push({ sender: 'user', text: message });
+        // inputField 리셋
+        inputField.value = '';
+        // 챗봇이 응답을 생성하는 중간에 사용자가 다른 질문을 할 수 없게 막는 기능
+        toggleInput2(false);
+        getChatbotResponse2(message);
+    }
+}
+
+function sendMessage3() {
+    const inputField = document.getElementById('chat-input3');
+    const message = inputField.value.trim();
+    if (message !== '') {
+        displayMessage3('user', message);
+        // 메시지를 messageHistory에 저장
+//        messageHistory.push({ sender: 'user', text: message });
+        // inputField 리셋
+        inputField.value = '';
+        // 챗봇이 응답을 생성하는 중간에 사용자가 다른 질문을 할 수 없게 막는 기능
+        toggleInput3(false);
+        getChatbotResponse3(message);
+    }
+}
+
+async function reloadChat1() {
     console.log('Reload button clicked. Messages are being reloaded.');
 
     // 메시지 영역 empty string을 대체하여 내용 리셋
-    const messagesContainer = document.getElementById('messages');
+    const messagesContainer = document.getElementById('messages1');
     messagesContainer.innerHTML = '';
 
     // model instance 다시 시작해서 로드하기.
-    const newMessage = await runPythonFunction();
-
+    const newMessage = await reload1();
 }
 
-function displayMessage(sender, message) {
-    const messagesContainer = document.getElementById('messages');
+async function reloadChat2() {
+    console.log('Reload button clicked. Messages are being reloaded.');
+
+    // 메시지 영역 empty string을 대체하여 내용 리셋
+    const messagesContainer = document.getElementById('messages2');
+    messagesContainer.innerHTML = '';
+
+    // model instance 다시 시작해서 로드하기.
+    const newMessage = await reload2();
+}
+
+async function reloadChat3() {
+    console.log('Reload button clicked. Messages are being reloaded.');
+
+    // 메시지 영역 empty string을 대체하여 내용 리셋
+    const messagesContainer = document.getElementById('messages3');
+    messagesContainer.innerHTML = '';
+
+    // model instance 다시 시작해서 로드하기.
+    const newMessage = await reload3();
+}
+
+function displayMessage1(sender, message) {
+    const messagesContainer = document.getElementById('messages1');
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}`;
 //    messageElement.textContent = message;
@@ -61,8 +133,65 @@ function displayMessage(sender, message) {
 }
 
 
-function getChatbotResponse(userMessage) {
-    fetch('http://localhost:5000/api/botResponse', {
+function displayMessage2(sender, message) {
+    const messagesContainer = document.getElementById('messages2');
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${sender}`;
+//    messageElement.textContent = message;
+    // Replace \n with <br> to handle line breaks
+    messageElement.innerHTML = message.replace(/\n/g, '<br>');
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+
+function displayMessage3(sender, message) {
+    const messagesContainer = document.getElementById('messages3');
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${sender}`;
+//    messageElement.textContent = message;
+    // Replace \n with <br> to handle line breaks
+    messageElement.innerHTML = message.replace(/\n/g, '<br>');
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+
+function linkifyText(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g; // URL 패턴을 찾는 정규 표현식
+    return text.replace(urlRegex, function(url) {
+      return `<a href="${url}" target="_blank">${url}</a>`; // URL을 <a> 태그로 감쌈
+    });
+  }
+
+
+
+function getChatbotResponse1(userMessage) {
+    fetch('http://localhost:5000/api/botResponse1', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        const botResponse = data.response;
+        const organizedResponse = linkifyText(botResponse);
+        console.log('Result:', organizedResponse); // 결과 출력
+        displayMessage1('bot', organizedResponse);
+        toggleInput1(true);
+
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+}
+
+
+function getChatbotResponse2(userMessage) {
+    fetch('http://localhost:5000/api/botResponse2', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -73,8 +202,8 @@ function getChatbotResponse(userMessage) {
     .then(data => {
         const botResponse = data.response;
         console.log('Result:', botResponse); // 결과 출력
-        displayMessage('bot', botResponse);
-        toggleInput(true);
+        displayMessage2('bot', botResponse);
+        toggleInput2(true);
 
     })
     .catch(error => {
@@ -83,9 +212,31 @@ function getChatbotResponse(userMessage) {
 
 }
 
-async function runPythonFunction() {
+function getChatbotResponse3(userMessage) {
+    fetch('http://localhost:5000/api/botResponse3', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        const botResponse = data.response;
+        console.log('Result:', botResponse); // 결과 출력
+        displayMessage3('bot', botResponse);
+        toggleInput3(true);
+
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+}
+
+async function reload1() {
     try {
-        const response = await fetch('/api/chatReload', {
+        const response = await fetch('/api/chatReload1', {
             method: 'GET', // 또는 POST 등 필요한 메서드를 사용
             headers: {
                 'Content-Type': 'application/json',
@@ -104,9 +255,77 @@ async function runPythonFunction() {
     }
 }
 
-function toggleInput(enable) {
+async function reload2() {
+    try {
+        const response = await fetch('/api/chatReload2', {
+            method: 'GET', // 또는 POST 등 필요한 메서드를 사용
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        return data.message; // Python 함수의 결과를 반환
+    } catch (error) {
+        console.error('Error fetching Python function result:', error);
+        return 'Error: Unable to load data';
+    }
+}
+
+async function reload3() {
+    try {
+        const response = await fetch('/api/chatReload3', {
+            method: 'GET', // 또는 POST 등 필요한 메서드를 사용
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        return data.message; // Python 함수의 결과를 반환
+    } catch (error) {
+        console.error('Error fetching Python function result:', error);
+        return 'Error: Unable to load data';
+    }
+}
+
+function toggleInput1(enable) {
 //    const inputField = document.getElementById('chat-input');
-    const sendButton = document.getElementById('send-button');
+    const sendButton = document.getElementById('send-button1');
+    if (enable) {
+//        inputField.disabled = false;
+        sendButton.disabled = false;
+//        inputField.focus();
+    } else {
+//        inputField.disabled = true;
+        sendButton.disabled = true;
+    }
+}
+
+function toggleInput2(enable) {
+//    const inputField = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button2');
+    if (enable) {
+//        inputField.disabled = false;
+        sendButton.disabled = false;
+//        inputField.focus();
+    } else {
+//        inputField.disabled = true;
+        sendButton.disabled = true;
+    }
+}
+
+function toggleInput3(enable) {
+//    const inputField = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button3');
     if (enable) {
 //        inputField.disabled = false;
         sendButton.disabled = false;
@@ -133,15 +352,26 @@ function adjustTextareaHeight(textarea) {
     textarea.style.height = newHeight + 'px'; // Set the height to match the content
 }
 
-const chatInput = document.getElementById('chat-input');
-chatInput.addEventListener('input', function() {
-    adjustTextareaHeight(chatInput);
+const chatInput1 = document.getElementById('chat-input1');
+const chatInput2 = document.getElementById('chat-input2');
+const chatInput3 = document.getElementById('chat-input3');
+
+chatInput1.addEventListener('input1', function() {
+    adjustTextareaHeight(chatInput1);
+});
+
+chatInput2.addEventListener('input2', function() {
+    adjustTextareaHeight(chatInput2);
+});
+
+chatInput3.addEventListener('input3', function() {
+    adjustTextareaHeight(chatInput3);
 });
 
 // Adjust height on page load in case there is already content
-adjustTextareaHeight(chatInput);
-
-
+adjustTextareaHeight(chatInput1);
+adjustTextareaHeight(chatInput2);
+adjustTextareaHeight(chatInput3);
 
 
 

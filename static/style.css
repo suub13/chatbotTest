@@ -73,8 +73,7 @@ header h2 {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-width: 80%;
-    max-width: 400px;
+    width: 1100px;
     min-height: 700px;
     margin: 20px auto;
     background: white;
@@ -84,6 +83,9 @@ header h2 {
 
 #separateBody {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+
 }
 
 #main-container {
@@ -95,13 +97,12 @@ header h2 {
 }
 
 #chat-container {
-    width: 100%;
-    max-width: 350px;
+    width: 300px;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 20px 0px;
+    margin: 20px 20px;
 }
 
 #chat-box {
@@ -116,7 +117,7 @@ header h2 {
     height: 600px;
 }
 
-#messages {
+.messages {
     flex: 1;
     padding: 10px;
     overflow-y: auto;
@@ -134,7 +135,7 @@ header h2 {
     align-items: flex-start; /* Align items at the top */
 }
 
-#chat-input {
+.chat-input {
     font-family: "Noto Sans KR", sans-serif;
     border: none;
     padding: 10px;
@@ -147,7 +148,7 @@ header h2 {
     font-size: 13px;
 }
 
-#send-button {
+.send-button {
     width: 35px;
     height: 33px;
     border: none;
@@ -160,11 +161,11 @@ header h2 {
     padding: 0px;
 }
 
-#send-button:hover {
+.send-button:hover {
     background-color: #b3bce7;
 }
 
-#send-button:disabled {
+.send-button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
@@ -184,11 +185,11 @@ header h2 {
     left: 5%; /* 부모의 중앙 위치로 이동 */
    /* transform: translateX(-50%); 중앙으로 위치 이동 */
     font-weight: bold; /* 굵은 글꼴 */
-    font-size: 20px;
+    font-size: 18px;
     color: #424242;
 }
 
-#reload-button {
+.reload-button {
     height: 30px;
 
     position: absolute;
@@ -202,7 +203,7 @@ header h2 {
     font-size: 20px;
 }
 
-#reload-button:hover {
+.reload-button:hover {
     background-color: #aeb7bf;
     border: 2px solid #aeb7bf;
     color: white;

@@ -29,6 +29,16 @@
             showAlert("{{ password_error }}");
         </script>
     {% endif %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
     <button onclick="window.location.href='/register'">Register</button>
 </body>
 </html>

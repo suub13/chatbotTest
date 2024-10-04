@@ -5,35 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OCR & LLM</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script>
+        window.addEventListener('beforeunload', function() {
+            // 페이지를 떠나기 전에 세션 초기화를 위한 요청을 보냅니다.
+            navigator.sendBeacon('/reset_session');
+        });
+    </script>
+    
 </head>
 <body>
-<!--    <header>-->
-<!--        <h2 onclick="window.location.href='/'">민원 Chatbot</h2>-->
-<!--        <div class="auth-buttons">-->
-<!--            {% if username %}-->
-<!--                <p class="welcome-text">{{ username }}</p>-->
-<!--                <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>-->
-<!--            {% else %}-->
-<!--                <button class="auth-button" onclick="window.location.href='/login'">Login</button>-->
-<!--                <button class="auth-button" onclick="window.location.href='/register'">Register</button>-->
-<!--            {% endif %}-->
-<!--        </div>-->
-<!--    </header>-->
+   <header>
+       <h2 onclick="window.location.href='/'">민원 Chatbot</h2>
+       <!-- <div class="auth-buttons">
+           {% if username %}
+               <p class="welcome-text">{{ username }}</p>
+               <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>
+           {% else %}
+               <button class="auth-button" onclick="window.location.href='/login'">Login</button>
+               <button class="auth-button" onclick="window.location.href='/register'">Register</button>
+           {% endif %}
+       </div> -->
+   </header>
     <div class="container" id="separateBody">
         <div id="chat-container">
             <div id="chat-box">
                 <div id="chat-header">
-                    <div id="chat-title">AI Chatbot</div>
-                    <button id="reload-button">↺</button>
+                    <div id="chat-title">Type 1</div>
+                    <button id="reload-button1" class="reload-button">↺</button>
                 </div>
-                <div id="messages"></div>
+                <div id="messages1" class="messages"></div>
                 <div id="input-container">
-                    <textarea id="chat-input" placeholder="메시지를 입력하세요..."></textarea>
-                    <button id="send-button">▲</button>
+                    <textarea id="chat-input1" class="chat-input" placeholder="메시지를 입력하세요..."></textarea>
+                    <button id="send-button1" class="send-button">▲</button>
+                </div>
+            </div>
+        </div>
+        <div id="chat-container">
+            <div id="chat-box">
+                <div id="chat-header">
+                    <div id="chat-title">Type 2</div>
+                    <button id="reload-button2" class="reload-button">↺</button>
+                </div>
+                <div id="messages2" class="messages"></div>
+                <div id="input-container">
+                    <textarea id="chat-input2" class="chat-input" placeholder="메시지를 입력하세요..."></textarea>
+                    <button id="send-button2" class="send-button">▲</button>
+                </div>
+            </div>
+        </div>
+        <div id="chat-container">
+            <div id="chat-box">
+                <div id="chat-header">
+                    <div id="chat-title">Type 3</div>
+                    <button id="reload-button3" class="reload-button">↺</button>
+                </div>
+                <div id="messages3" class="messages"></div>
+                <div id="input-container">
+                    <textarea id="chat-input3" class="chat-input" placeholder="메시지를 입력하세요..."></textarea>
+                    <button id="send-button3" class="send-button">▲</button>
                 </div>
             </div>
         </div>
     </div>
-    <script src="static/script.js"></script>
+    <script src="static/script1.js"></script>
+    
 </body>
 </html>
