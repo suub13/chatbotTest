@@ -62,8 +62,8 @@ class ReActAgentBarrack():
             doc_path, 
             name: str, 
             description: str,
-            chunk_size=470,
-            chunk_overlap=35,
+            chunk_size=700,
+            chunk_overlap=70,
             embedding=OpenAIEmbeddings()):
 
         from langchain_community.document_loaders import TextLoader

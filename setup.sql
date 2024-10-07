@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS users (
 -- Create conversations table
 CREATE TABLE IF NOT EXISTS conversations (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    -- user_id INT,
-    chat_type varchar(10),
-    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    -- FOREIGN KEY (user_id) REFERENCES users(id)
+    user_id INT,
+    chat_type varchar(10) not null,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP not null,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- Create messages table

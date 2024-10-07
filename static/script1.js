@@ -45,7 +45,17 @@ function getChatbotResponse(chatbotNumber, userMessage) {
         },
         body: JSON.stringify({ message: userMessage }),
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401){
+                alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+                window.location.href='/login';
+            } else {
+                throw new Error('Network response was not ok');
+            }    
+        } 
+        return response.json();
+    })
     .then(data => {
         const botResponse = data.response;
         console.log('Result:', botResponse); // 결과 출력
