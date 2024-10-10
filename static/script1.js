@@ -72,16 +72,17 @@ async function reloadChat(chatbotNumber) {
 
     // 메시지 영역 리셋
     const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
+    
+    toggleInput(chatbotNumber, false);
+    await callReload(chatbotNumber);
     messagesContainer.innerHTML = '';
-
-    // Python 백엔드와 통신하여 채팅 기록을 다시 불러옴
-    const newMessage = await runPythonFunction(chatbotNumber);
+    toggleInput(chatbotNumber, true);
 }
 
-async function runPythonFunction(chatbotNumber) {
+async function callReload(chatbotNumber) {
     try {
-        const response = await fetch(`/api/chatReload${chatbotNumber}`, {
-            method: 'GET',
+        const response = await fetch(`/api/chatReload/${chatbotNumber}`, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -90,12 +91,8 @@ async function runPythonFunction(chatbotNumber) {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-
-        const data = await response.json();
-        return data.message; // Python 함수의 결과 반환
     } catch (error) {
         console.error('Error fetching Python function result:', error);
-        return 'Error: Unable to load data';
     }
 }
 

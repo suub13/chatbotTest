@@ -9,7 +9,6 @@ USE chatbot;
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(20) NOT NULL, 
-    username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     sex CHAR(1) CHECK (sex IN ('f', 'm')) NOT NULL, 
     age INT NOT NULL,

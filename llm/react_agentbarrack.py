@@ -30,7 +30,7 @@ class ReActAgentBarrack():
             model_id='gpt-4o',
             template='',
             tools=None,
-            verbose=True,
+            verbose=False,
             presets=None,
             ):
         if tools is None:
@@ -62,20 +62,25 @@ class ReActAgentBarrack():
             doc_path, 
             name: str, 
             description: str,
-            chunk_size=700,
-            chunk_overlap=70,
-            embedding=OpenAIEmbeddings()):
+            chunk_size=470,
+            chunk_overlap=45,
+            embedding=OpenAIEmbeddings(model='text-embedding-3-large')):
 
         from langchain_community.document_loaders import TextLoader
         from langchain.text_splitter import RecursiveCharacterTextSplitter
         from langchain_community.vectorstores import FAISS
+        from langchain_community.vectorstores.utils import DistanceStrategy
         from langchain.tools.retriever import create_retriever_tool
 
         data = TextLoader(doc_path, encoding='utf-8').load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         splits = text_splitter.split_documents(data)
-        vectorstore = FAISS.from_documents(documents=splits, embedding=embedding)
-        retriever = vectorstore.as_retriever(search_type="similarity")
+        vectorstore = FAISS.from_documents(documents=splits, 
+                                           embedding=embedding,
+                                           distance_strategy = DistanceStrategy.COSINE,
+                                           )
+        
+        retriever = vectorstore.as_retriever()
         retriever_tool = create_retriever_tool(
             retriever,
             name=name,
@@ -158,9 +163,14 @@ class ReActAgentBarrack():
                         output = output_2
                     else:
                         output = output_1
-                    
                 else:
                     output = 'Thought'
+
+            elif result.get('output') == "I'm sorry, but I can't assist with that request.":
+                intermediate_steps = result.get('intermediate_steps', [])
+                last_step = intermediate_steps[-1]
+                output = last_step[0].log
+
             else:
                 output = result.get('output')
             
@@ -175,6 +185,10 @@ class ReActAgentBarrack():
         self.memory.save_context(inputs={"human": self.input}, outputs={"ai": self.output})
 
         return self.output
+    
+
+    def get_chat(self, ):
+        return self.memory.load_memory_variables({})["chat_history"]
 
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')

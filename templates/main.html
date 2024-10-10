@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>OCR & LLM</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <script>
         window.addEventListener('beforeunload', function() {
             // 페이지를 떠나기 전에 세션 초기화를 위한 요청을 보냅니다.
@@ -15,17 +16,17 @@
 </head>
 <body>
    <header>
-       <h2 onclick="window.location.href='/'">민원 Chatbot</h2>
+       <h2 onclick="window.location.href='/'" style="margin-left:20px;">민원 Chatbot</h2>
        <div class="auth-buttons">
-           {% if username %}
-               <p class="welcome-text">{{ username }}</p>
+           {% if email %}
+               <p class="welcome-text">{{ email }}</p>
                <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>
            {% else %}
-               <button class="auth-button" onclick="window.location.href='/login'">Login</button>
-               <button class="auth-button" onclick="window.location.href='/register'">Register</button>
+               <button class="auth-button" onclick="window.location.href='/login?action=login'">Login</button>
+               <button class="auth-button" onclick="window.location.href='/login?action=register'">Register</button>
            {% endif %}
        </div>
-   </header>
+    </header>
     <div class="container" id="separateBody">
         <div id="chat-container">
             <div id="chat-box">

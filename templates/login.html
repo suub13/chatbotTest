@@ -1,44 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <script>
-        function showAlert(message) {
-            alert(message);
-        }
-    </script>
-</head>
-<body>
-    <h2>Login</h2>
-    <form method="POST" id="loginForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <button type="submit">Login</button>
-    </form>
-    {% if username_error %}
+<html lang="es" dir="ltr">
+    <head>
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="/static/login.css">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
         <script>
-            showAlert("{{ username_error }}");
-        </script>
-    {% elif password_error %}
-        <script>
-            showAlert("{{ password_error }}");
-        </script>
-    {% endif %}
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('check-email').addEventListener('click', function() {
+                    const email = document.getElementById('email').value;
+                    const resultSpan = document.getElementById('email-check-result'); // span 요소 가져오기
 
-    <button onclick="window.location.href='/register'">회원가입</button>
-</body>
+                    // 이메일 입력값이 비어있는지 확인
+                    if (!email) {
+                        resultSpan.textContent = '이메일을 입력하세요.'; // 오류 메시지 표시
+                        resultSpan.style.color = 'red';
+                        resultSpan.style.display = 'block'; // span 요소 보이게 하기
+                        return;
+                    }
+
+                    // 이메일 중복 확인 요청
+                    fetch(`/check_email?email=${email}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.exists) {
+                                resultSpan.textContent = '이메일이 이미 존재합니다.'; // 중복 시 메시지
+                                resultSpan.style.color = 'red';
+                            } else {
+                                resultSpan.textContent = '이메일 사용 가능.'; // 사용 가능 시 메시지
+                                resultSpan.style.color = 'green';
+                            }
+                            resultSpan.style.display = 'block'; // span 요소 보이게 하기
+                        })
+                        .catch(error => {
+                            console.error('이메일 확인 중 오류 발생:', error);
+                            resultSpan.textContent = '오류가 발생했습니다. 나중에 다시 시도하세요.'; // 오류 메시지
+                            resultSpan.style.color = 'red';
+                            resultSpan.style.display = 'block'; // span 요소 보이게 하기
+                        });
+                });
+            }); 
+            function showAlert(message) {
+                alert(message);
+            };
+        </script>
+    </head>
+    <body>
+        <div class="main">
+            <div class="container a-container {{ 'hidden' if show_login else 'visible' }}" id="a-container">
+                <form class="form" id="a-form" method="POST" action='/register'>
+                    <h2 class="form_title title">계정 만들기</h2>
+                    <input class="form__input" type="text" name="name" placeholder="이름" required>
+                    <div class="email-container">
+                        <input class="form__input" type="email" id="email" name="email" placeholder="이메일" required>
+                        <button type="button" id="check-email" class="form__button button">중복 확인</button>
+                    </div>
+                    <span id="email-check-result" class="form__span" style="display: none;"></span>
+                    <input class="form__input" type="password" name="password" placeholder="비밀번호" required>
+                    <select class="form__input" name="sex" required>
+                        <option value="" disabled selected>성별</option>
+                        <option value="m">Male</option>
+                        <option value="f">Female</option>
+                    </select>
+                    <input class="form__input" type="number" name="age" min="0" placeholder="Age" required>
+                    <button class="form__button button submit" type="submit">회원가입</button>
+                </form>
+            </div>
+            <div class="container b-container" id="b-container">
+                <form class="form" id="b-form" method="POST" action='/login'>
+                    <h2 class="form_title title">로그인하기</h2>
+                    <input class="form__input" type="text" name='email' placeholder="이메일">
+                    <input class="form__input" type="password" name='password' placeholder="비밀번호"><a class="form__link">비밀번호를 잊어버리셨나요?</a>
+                    <button class="form__button button submit" type="submit">로그인</button>
+                </form>
+            </div>
+            <div class="switch" id="switch-cnt">
+                <div class="switch__circle"></div>
+                <div class="switch__circle switch__circle--t"></div>
+                <div class="switch__container" id="switch-c1">
+                    <h2 class="switch__title title">환영합니다!</h2>
+                    <p class="switch__description description">계정이 있으시다면 로그인을 진행해주세요.</p>
+                    <button class="switch__button button switch-btn">로그인</button>
+                </div>
+                <div class="switch__container is-hidden" id="switch-c2">
+                    <h2 class="switch__title title">처음이신가요?</h2>
+                    <p class="switch__description description">회원가입을 통해 시작할 수 있습니다.</p>
+                    <button class="switch__button button switch-btn">회원가입</button>
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <script>
+                    showAlert("{{ messages }}");
+                </script>>
+            {% endif %}
+        {% endwith %}
+
+
+        <script src="static/login.js"></script>
+    </body>
 </html>

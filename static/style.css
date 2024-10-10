@@ -19,7 +19,7 @@ header {
     padding: 20px;
     /* background-color: #333; #FDDEAC*/
     background-color: white;
-
+    height: 100px;
     width: 100%;  /* 페이지 가로 길이를 꽉 채우도록 설정 */
     box-sizing: border-box;  /* padding을 포함하여 width를 계산 */
     position: relative;  /* auth-buttons의 위치를 기준으로 설정 */
@@ -27,7 +27,7 @@ header {
 }
 
 header h2 {
-    color: #F99704;
+    color: black;
     margin: 0;
 }
 
@@ -35,38 +35,38 @@ header h2 {
     display: flex;
     gap: 10px;
     position: absolute;  /* 절대 위치 */
-    right: 20px;  /* 오른쪽 끝으로 이동 */
+    right: 50px;  /* 오른쪽 끝으로 이동 */
     align-items: center;  /* 하단 정렬 */
 }
 
 .auth-buttons p {
-    font-size: 16px;  /* 폰트 크기 설정 */
+    font-size: 18px;  /* 폰트 크기 설정 */
     margin: 0;  /* 기본 여백 제거 */
 }
 
 .auth-buttons a,
 .auth-buttons button {
-    background-color: #F99704;
-    color: white;
+    background-color: white;
+    color: black;
     padding: 10px 10px;
     text-decoration: none;
     border: none;
     cursor: pointer;
-    border-radius: 4px;
-    width: 70px;
-
+    border-radius: 2px;
+    width: 90px;
+    font-size: 16px;
 }
 
-.auth-buttons .auth-link {
+/* .auth-buttons .auth-link {
     /* background-color: #666; */
-    color: white;
+    /* color: white; */
 
-}
+/* } */ 
 
 .auth-buttons a:hover,
 .auth-buttons button:hover {
-    background-color: #666;
-    color:white;
+    background-color: #E5F0FE;
+    color:#333333;
 }
 
 .container {
@@ -122,7 +122,7 @@ header h2 {
     padding: 10px;
     overflow-y: auto;
     border-bottom: 1px solid #ccc;
-    background-color: #e9ecef;
+    background-color: #E5F0FE;
     display: flex;
     flex-direction: column;
 }
@@ -152,7 +152,7 @@ header h2 {
     width: 35px;
     height: 33px;
     border: none;
-    background-color: #C9D2FF;
+    background-color: #C8E0FE;
     color: white;
     cursor: pointer;
     margin: 10px 5px;

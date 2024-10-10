@@ -65,8 +65,6 @@ PRESET_B = {
     """
 }
 
-#  You should ask questions with an example or two of information or considerations that may have been missed.
-
 # 요약 질문
 PRESET_C = {
     'preset_name': 'PRESET_C',
