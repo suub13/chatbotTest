@@ -16,7 +16,6 @@ header {
     display: flex;
     justify-content: left;  /* h2 태그를 가운데에 위치시키도록 설정 */
     align-items: center;
-    padding: 20px;
     /* background-color: #333; #FDDEAC*/
     background-color: white;
     height: 100px;
@@ -82,9 +81,10 @@ header h2 {
 }
 
 #separateBody {
+    width: 100%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
 
 }
 
@@ -97,7 +97,9 @@ header h2 {
 }
 
 #chat-container {
-    width: 300px;
+    min-width: 300px;
+    max-width: 1000px;
+    width: 70%;
     height: 100%;
     display: flex;
     justify-content: center;

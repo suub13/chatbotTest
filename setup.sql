@@ -5,23 +5,12 @@ CREATE DATABASE IF NOT EXISTS chatbot;
 -- Use the chatbot database
 USE chatbot;
 
--- Create users table
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(20) NOT NULL, 
-    password VARCHAR(255) NOT NULL,
-    sex CHAR(1) CHECK (sex IN ('f', 'm')) NOT NULL, 
-    age INT NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL
-);
-
 -- Create conversations table
 CREATE TABLE IF NOT EXISTS conversations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     chat_type varchar(10) not null,
-    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP not null,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP not null
 );
 
 -- Create messages table
