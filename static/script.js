@@ -15,13 +15,33 @@ function handleKeyDown(event, chatbotNumber) {
 }
 
 function sendMessage(chatbotNumber) {
+    console.log(chatbotNumber);
     const inputField = document.getElementById(`chat-input${chatbotNumber}`);
     const message = inputField.value.trim();
     if (message !== '') {
         displayMessage(chatbotNumber, 'user', message);
+        userMessageDB(chatbotNumber, message);
         inputField.value = ''; // inputField 리셋
         toggleInput(chatbotNumber, false); // 입력 필드 비활성화
         getChatbotResponse(chatbotNumber, message); // 챗봇 응답 요청
+    }
+}
+
+async function userMessageDB(chatbotNumber, userMessage){
+    try {
+        const response = await fetch(`/api/userMessage${chatbotNumber}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: userMessage }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+    } catch (error) {
+        console.error('Error fetching Python function result:', error);
     }
 }
 
@@ -38,7 +58,7 @@ function displayMessage(chatbotNumber, sender, message) {
 }
 
 function getChatbotResponse(chatbotNumber, userMessage) {
-    fetch(`/api/botResponse/${chatbotNumber}`, {
+    fetch(`/api/botResponse${chatbotNumber}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -108,10 +128,6 @@ function adjustTextareaHeight(textarea) {
     textarea.style.height = newHeight + 'px'; // 텍스트 높이 설정
 }
 
-// 각 챗봇별로 이벤트 리스너 설정
-setupEventListeners(1);
-setupEventListeners(2);
-setupEventListeners(3);
 
 function setupTextareaAdjustment(chatbotNumber) {
     const chatInput = document.getElementById(`chat-input${chatbotNumber}`);
@@ -120,18 +136,4 @@ function setupTextareaAdjustment(chatbotNumber) {
     });
     adjustTextareaHeight(chatInput); // 초기 높이 조정
 }
-
-// 각 챗봇에 대해 텍스트 입력 창 높이 조절 설정
-setupTextareaAdjustment(1);
-setupTextareaAdjustment(2);
-setupTextareaAdjustment(3);
-
-
-// URL에서 쿼리 파라미터로부터 userid 추출
-function getQueryParameter(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
-}
-
-
 

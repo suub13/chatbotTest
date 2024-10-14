@@ -11,23 +11,6 @@
             // 페이지를 떠나기 전에 세션 초기화를 위한 요청을 보냅니다.
             navigator.sendBeacon('/reset_session');
         });
-        // Flash 메시지를 팝업으로 띄우는 함수
-        function showPopup(message) {
-        alert(message); // 간단한 팝업 메시지, 또는 모달 창을 사용할 수 있습니다.
-        }
-        function showPopup(message) {
-            alert(message); // 간단한 팝업 메시지, 또는 모달 창을 사용할 수 있습니다.
-        }
-
-        // 예를 들어, 페이지가 로드될 때 AJAX 요청을 보낸다고 가정해 봅시다.
-        fetch('/survey/type1')
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showPopup(data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
     </script>
     
 </head>
@@ -40,13 +23,6 @@
             {% else %}
             <p class="welcome-text"> user id 없음</p>
             {% endif %}
-           <!-- {% if email %}
-               <p class="welcome-text">{{ email }}</p>
-               <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>
-           {% else %}
-               <button class="auth-button" onclick="window.location.href='/login?action=login'">Login</button>
-               <button class="auth-button" onclick="window.location.href='/login?action=register'">Register</button>
-           {% endif %} -->
        </div>
     </header>
     <div class="container" id="separateBody">
@@ -64,14 +40,10 @@
             </div>
         </div>
     </div>
-    <div class="flash-messages">
-        <div class="flash-messages">
-            {% for category, message in messages %}
-                <p class="{{ category }}">{{ message }}</p>
-            {% endfor %}
-        </div>
-    </div>
-    <script src="static/script.js"></script>
-    
+    <script src="../static/script.js"></script>
+    <script>
+        setupEventListeners(1);
+        setupTextareaAdjustment(1);
+    </script>
 </body>
 </html>
