@@ -1,9 +1,23 @@
-version: '3.8'
-
 services:
-  mysql:
+  web:
+    build: .
+    container_name: chatbot_flask
+    command: flask run --host=0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      MYSQL_HOST: mysql_db
+      MYSQL_USER: subyou
+      MYSQL_PASSWORD: root
+      MYSQL_DB: chatbot
+    depends_on:
+      - mysql_db
+
+  mysql_db:
     image: mysql:8.0
-    container_name: mysql_db
+    container_name: chatbot_mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: chatbot
@@ -13,20 +27,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-
-  web:
-    build: .
-    container_name: flask_app
-    command: flask run --host=0.0.0.0
-    environment:
-      FLASK_ENV: development
-      MYSQL_HOST: mysql
-    ports:
-      - "5000:5000"
-    depends_on:
-      - mysql
-    volumes:
-      - .:/app
+    command: --default-authentication-plugin=mysql_native_password
 
 volumes:
   mysql_data:

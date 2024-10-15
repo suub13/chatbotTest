@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MySQL 설정
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = 'mysql_db'
 app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
@@ -119,7 +119,6 @@ def chatbot_type(typeNum):
     return render_template(f'type{typeNum}.html', userid=userid) 
 
 
-
 conversation_types = {
     1: 'conv1',
     2: 'conv2',
@@ -159,23 +158,6 @@ def user_message(chatbot_number):
 @app.route('/api/botResponse<int:chatbot_number>', methods=['POST'])
 def bot_response(chatbot_number):    
     userid = session.get('userid')
-
-    # # 확인용 PRINT ------------------------------------------------------
-    # if userid in chat_agents:
-    #     user_chats = chat_agents[userid]
-    #     chat_history = {}
-        
-    #     # chat1, chat2, chat3의 히스토리를 수집
-    #     for chat_key in ['chat_agent1', 'chat_agent2', 'chat_agent3']:
-    #         if chat_key in user_chats:
-    #             chat_history[chat_key] = user_chats[chat_key].get_chat()
-    #         else:
-    #             chat_history[chat_key] = "No chat history found"
-                
-    #     print(chat_history)
-    # else:
-    #     print("User ID not found")
-    # # --------------------------------------------------------------------
 
     if not userid:
         return jsonify({'error': 'User ID not found in session'}), 400
@@ -225,6 +207,7 @@ def chat_reload(chatbot_number):
 
     return '', 204
 
+
 @app.route('/reset_session', methods=['POST'])
 def reset_session():
     session.clear()  # 세션을 초기화합니다.
@@ -232,7 +215,6 @@ def reset_session():
 
 
 if __name__ == '__main__':
-    
     app.run(debug=True)
 
 
