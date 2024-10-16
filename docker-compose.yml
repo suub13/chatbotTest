@@ -13,7 +13,8 @@ services:
       MYSQL_PASSWORD: root
       MYSQL_DB: chatbot
     depends_on:
-      - mysql_db
+      mysql_db:
+        condition: service_healthy
 
   mysql_db:
     image: mysql:8.0
@@ -28,6 +29,10 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
 
 volumes:
   mysql_data:
