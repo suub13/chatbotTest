@@ -97,12 +97,12 @@ header h2 {
 }
 
 #chat-container {
-    min-width: 300px;
+    min-width: 400px;
     max-width: 1000px;
-    width: 70%;
+    width: 80%;
     height: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     margin: 20px 20px;
 }
@@ -238,3 +238,54 @@ header h2 {
     font-size: 13px;
 }
 
+
+.template-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 500px;
+    text-align: center;
+    margin: 40px;
+    padding: 20px;
+}
+
+textarea#template {
+    width: 90%;
+    height: 150px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    resize: none;
+    font-family: "Noto Sans KR", sans-serif;
+}
+input[type="submit"] {
+    background-color: #a1c9fa;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+}
+input[type="submit"]:hover {
+    background-color: #9eabeb;
+}
+
+.template_title {
+    padding-bottom: 24px;
+}
+
+.original-template{
+    width: 90%;
+    height: 150px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: none;
+    display: flex;
+    align-items: center;   
+    font-size: 14px;
+}

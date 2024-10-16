@@ -11,6 +11,33 @@
             // 페이지를 떠나기 전에 세션 초기화를 위한 요청을 보냅니다.
             navigator.sendBeacon('/reset_session');
         });
+        document.addEventListener('DOMContentLoaded', function() {
+            const userid = "{{ userid }}";
+            const typeNum = 2;  // Type 1 고정
+
+            fetch('/create_agent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userid: userid,
+                    typeNum: typeNum
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    console.log(data.message);
+                    // 이후 작업 (예: 채팅 창 초기화 등)
+                }
+            })
+            .catch(error => {
+                console.error('Error creating chat agent:', error);
+            });
+        });
     </script>
     
 </head>
