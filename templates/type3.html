@@ -6,10 +6,25 @@
     <title>OCR & LLM</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        .alert {
+            display: none;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
     <script>
         window.addEventListener('beforeunload', function() {
-            // 페이지를 떠나기 전에 세션 초기화를 위한 요청을 보냅니다.
-            navigator.sendBeacon('/reset_session');
+            resetSessionTimeout = setTimeout(() => {
+                navigator.sendBeacon('/reset_session');
+            }, 100);  // Adjust the delay as necessary
         });
         document.addEventListener('DOMContentLoaded', function() {
             const userid = "{{ userid }}";
@@ -50,13 +65,6 @@
             {% else %}
             <p class="welcome-text"> user id 없음</p>
             {% endif %}
-           <!-- {% if email %}
-               <p class="welcome-text">{{ email }}</p>
-               <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>
-           {% else %}
-               <button class="auth-button" onclick="window.location.href='/login?action=login'">Login</button>
-               <button class="auth-button" onclick="window.location.href='/login?action=register'">Register</button>
-           {% endif %} -->
        </div>
     </header>
     <div class="container" id="separateBody">
@@ -71,6 +79,19 @@
                     <textarea id="chat-input3" class="chat-input" placeholder="메시지를 입력하세요..."></textarea>
                     <button id="send-button3" class="send-button">▲</button>
                 </div>
+            </div>
+            <div class="template-container">
+                <div id="template-div">
+                    <div class="template_title">Template 수정</div>
+                    <div class="original-template">You must answer in a narrative, one-line format. <br>
+                        You must ask one or two questions to check if there is any missing information or considerations. <br>
+                        You need to understand the situation the human is in from previous conversations. <br>
+                        All answers should be in Korean.</div>
+                    <div style="font-size: 20px;">⇩</div>
+                    <textarea id="template3" name="template" rows="10" cols="30"></textarea><br>
+                    <button id="template-button3" class="template-button">수정하기</button>
+                </div>
+                <div id="response-message3"></div> <!-- 성공 메시지 표시할 공간 -->
             </div>
         </div>
     </div>

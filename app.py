@@ -194,11 +194,12 @@ def create_chat_agent(preset=None):
     # Return a success message
     return jsonify({'message': 'Chat agent created successfully'}), 200
 
+
 @app.route('/update_template', methods=['POST'])
 def update_template():
     new_template = request.form['template']  # 사용자가 입력한 템플릿 내용 가져오기
-
     result = create_chat_agent(preset=new_template)
+
     # 성공 메시지 페이지로 리다이렉트
     return result
 
@@ -275,6 +276,8 @@ def bot_response(typeNum):
     finally:
         cur.close()
         conn.commit()
+
+    print(chat_agent.get_chat())
 
     return jsonify({'response': response})
 

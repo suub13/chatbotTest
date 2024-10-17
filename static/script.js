@@ -1,13 +1,16 @@
 function setupEventListeners(typeNum) {
     document.getElementById(`send-button${typeNum}`).addEventListener('click', () => sendMessage(typeNum));
-
-    document.getElementById(`send-button${typeNum}`).addEventListener('click', () => sendMessage(typeNum));
     
     // 'Enter' 버튼을 누르면 버튼 클릭과 동일한 기능 수행
     document.getElementById(`chat-input${typeNum}`).addEventListener('keydown', (event) => MessageHandleKeyDown(event, typeNum));
     
     // Reload 버튼 리스너
     document.getElementById(`reload-button${typeNum}`).addEventListener('click', () => reloadChat(typeNum));
+    
+
+    document.getElementById(`template-button${typeNum}`).addEventListener('click', () => setupTemplateFormListener(typeNum));
+
+    document.getElementById(`template${typeNum}`).addEventListener('keydown', (event) => TempalteHandleKeyDown(event, typeNum));
 }
 
 
@@ -15,6 +18,12 @@ function MessageHandleKeyDown(event, typeNum) {
     if (event.key === 'Enter'&& !event.shiftKey) {
         sendMessage(typeNum);
     }
+}
+
+function TempalteHandleKeyDown(event, typeNum) {
+    if (event.key === 'Enter'&& !event.shiftKey) {
+        setupTemplateFormListener(typeNum);
+    } 
 }
 
 function sendMessage(typeNum) {
@@ -116,6 +125,12 @@ function toggleInput(typeNum, enable) {
     sendButton.disabled = !enable; // 버튼 활성화/비활성화
 }
 
+
+function templateToggleInput(typeNum, enabled) {
+    const button = document.getElementById(`template-button${typeNum}`);
+    button.disabled = !enabled;
+}
+
 function adjustTextareaHeight(textarea) {
     textarea.style.height = 'auto'; // 높이 초기화
     let newHeight = textarea.scrollHeight;
@@ -140,40 +155,86 @@ function setupTextareaAdjustment(typeNum) {
     adjustTextareaHeight(chatInput); // 초기 높이 조정
 }
 
-document.getElementById('template-form').addEventListener('submit', function(event) {
-    event.preventDefault();  // 폼의 기본 동작(페이지 리로드)을 막음
 
-    const responseMessage = document.getElementById('response-message');
-    responseMessage.innerText = '';
-    
-    const template = document.getElementById('template').value;  // textarea 값 가져오기
+async function setupTemplateFormListener(typeNum) {
+    console.log("들어왔슘");
 
-    fetch('/update_template', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',  // 폼 데이터 전송 방식
-        },
-        body: new URLSearchParams({
-            'template': template
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.text();  // 200일 때 응답 본문 처리
-        } else {
+    // 버튼 비활성화
+    templateToggleInput(typeNum, false);
+
+    const messagesContainer = document.getElementById(`messages${typeNum}`);
+    messagesContainer.innerText = '';
+
+    const responseMessage = document.getElementById(`response-message${typeNum}`);
+
+    const template = document.getElementById(`template${typeNum}`).value;  // textarea 값 가져오기
+
+    try {
+        // Fetch 요청 대기
+        const response = await fetch('/update_template', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',  // 폼 데이터 전송 방식
+            },
+            body: new URLSearchParams({
+                'template': template
+            })
+        });
+
+        if (!response.ok) {
             throw new Error('400 error: Missing userid or typeNum');
         }
-    })
-    .then(data => {
-        document.getElementById('response-message').innerText = 'Template 수정 완료';  // 성공 메시지 표시
-    })
-    .catch(error => {
-        document.getElementById('response-message').innerText = '오류가 발생했습니다: ' + error.message;  // 에러 메시지 표시
-    });
-});
-document.getElementById('template').addEventListener('keydown', function(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {  // Enter 키를 누르면 제출 (Shift + Enter는 줄바꿈)
-        event.preventDefault();
-        document.getElementById('template-form').dispatchEvent(new Event('submit'));  // 폼 제출 트리거
+
+        // 응답 처리
+        const data = await response.text();  // 응답 본문 처리
+        responseMessage.innerText = 'Template 수정 완료';  // 성공 메시지 표시
+    } catch (error) {
+        // 오류 처리
+        responseMessage.innerText = '오류가 발생했습니다: ' + error.message;
+    } finally {
+        // 버튼 다시 활성화
+        templateToggleInput(typeNum, true);
+        console.log("끝났슘");
     }
-});
+}
+
+
+
+
+// document.getElementById('template-form').addEventListener('submit', function(event) {
+//     event.preventDefault();  // 폼의 기본 동작(페이지 리로드)을 막음
+
+//     const responseMessage = document.getElementById('response-message');
+//     responseMessage.innerText = '';
+    
+//     const template = document.getElementById('template').value;  // textarea 값 가져오기
+
+//     fetch('/update_template', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/x-www-form-urlencoded',  // 폼 데이터 전송 방식
+//         },
+//         body: new URLSearchParams({
+//             'template': template
+//         })
+//     })
+//     .then(response => {
+//         if (response.ok) {
+//             return response.text();  // 200일 때 응답 본문 처리
+//         } else {
+//             throw new Error('400 error: Missing userid or typeNum');
+//         }
+//     })
+//     .then(data => {
+//         document.getElementById('response-message').innerText = 'Template 수정 완료';  // 성공 메시지 표시
+//     })
+//     .catch(error => {
+//         document.getElementById('response-message').innerText = '오류가 발생했습니다: ' + error.message;  // 에러 메시지 표시
+//     });
+// });
+// document.getElementById('template').addEventListener('keydown', function(event) {
+//     if (event.key === 'Enter' && !event.shiftKey) {  // Enter 키를 누르면 제출 (Shift + Enter는 줄바꿈)
+//         event.preventDefault();
+//         document.getElementById('template-form').dispatchEvent(new Event('submit'));  // 폼 제출 트리거
+//     }
+// });
