@@ -8,9 +8,9 @@ function setupEventListeners(typeNum) {
     document.getElementById(`reload-button${typeNum}`).addEventListener('click', () => reloadChat(typeNum));
     
 
-    document.getElementById(`template-button${typeNum}`).addEventListener('click', () => setupTemplateFormListener(typeNum));
+    document.getElementById(`prompt-button${typeNum}`).addEventListener('click', () => setupPromptFormListener(typeNum));
 
-    document.getElementById(`template${typeNum}`).addEventListener('keydown', (event) => TempalteHandleKeyDown(event, typeNum));
+    document.getElementById(`prompt${typeNum}`).addEventListener('keydown', (event) => TempalteHandleKeyDown(event, typeNum));
 }
 
 
@@ -22,7 +22,7 @@ function MessageHandleKeyDown(event, typeNum) {
 
 function TempalteHandleKeyDown(event, typeNum) {
     if (event.key === 'Enter'&& !event.shiftKey) {
-        setupTemplateFormListener(typeNum);
+        setupPromptFormListener(typeNum);
     } 
 }
 
@@ -126,8 +126,8 @@ function toggleInput(typeNum, enable) {
 }
 
 
-function templateToggleInput(typeNum, enabled) {
-    const button = document.getElementById(`template-button${typeNum}`);
+function promptToggleInput(typeNum, enabled) {
+    const button = document.getElementById(`prompt-button${typeNum}`);
     button.disabled = !enabled;
 }
 
@@ -156,28 +156,28 @@ function setupTextareaAdjustment(typeNum) {
 }
 
 
-async function setupTemplateFormListener(typeNum) {
+async function setupPromptFormListener(typeNum) {
     console.log("들어왔슘");
 
     // 버튼 비활성화
-    templateToggleInput(typeNum, false);
+    promptToggleInput(typeNum, false);
 
     const messagesContainer = document.getElementById(`messages${typeNum}`);
     messagesContainer.innerText = '';
 
     const responseMessage = document.getElementById(`response-message${typeNum}`);
 
-    const template = document.getElementById(`template${typeNum}`).value;  // textarea 값 가져오기
+    const prompt = document.getElementById(`prompt${typeNum}`).value;  // textarea 값 가져오기
 
     try {
         // Fetch 요청 대기
-        const response = await fetch('/update_template', {
+        const response = await fetch('/update_prompt', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',  // 폼 데이터 전송 방식
             },
             body: new URLSearchParams({
-                'template': template
+                'prompt': prompt
             })
         });
 
@@ -187,54 +187,15 @@ async function setupTemplateFormListener(typeNum) {
 
         // 응답 처리
         const data = await response.text();  // 응답 본문 처리
-        responseMessage.innerText = 'Template 수정 완료';  // 성공 메시지 표시
+        responseMessage.innerText = 'Prompt 수정 완료';  // 성공 메시지 표시
     } catch (error) {
         // 오류 처리
         responseMessage.innerText = '오류가 발생했습니다: ' + error.message;
     } finally {
         // 버튼 다시 활성화
-        templateToggleInput(typeNum, true);
+        promptToggleInput(typeNum, true);
         console.log("끝났슘");
     }
 }
 
 
-
-
-// document.getElementById('template-form').addEventListener('submit', function(event) {
-//     event.preventDefault();  // 폼의 기본 동작(페이지 리로드)을 막음
-
-//     const responseMessage = document.getElementById('response-message');
-//     responseMessage.innerText = '';
-    
-//     const template = document.getElementById('template').value;  // textarea 값 가져오기
-
-//     fetch('/update_template', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/x-www-form-urlencoded',  // 폼 데이터 전송 방식
-//         },
-//         body: new URLSearchParams({
-//             'template': template
-//         })
-//     })
-//     .then(response => {
-//         if (response.ok) {
-//             return response.text();  // 200일 때 응답 본문 처리
-//         } else {
-//             throw new Error('400 error: Missing userid or typeNum');
-//         }
-//     })
-//     .then(data => {
-//         document.getElementById('response-message').innerText = 'Template 수정 완료';  // 성공 메시지 표시
-//     })
-//     .catch(error => {
-//         document.getElementById('response-message').innerText = '오류가 발생했습니다: ' + error.message;  // 에러 메시지 표시
-//     });
-// });
-// document.getElementById('template').addEventListener('keydown', function(event) {
-//     if (event.key === 'Enter' && !event.shiftKey) {  // Enter 키를 누르면 제출 (Shift + Enter는 줄바꿈)
-//         event.preventDefault();
-//         document.getElementById('template-form').dispatchEvent(new Event('submit'));  // 폼 제출 트리거
-//     }
-// });

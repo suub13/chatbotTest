@@ -167,7 +167,7 @@ header h2 {
     background-color: #b3bce7;
 }
 
-.send-button:disabled, .template-button:disabled{
+.send-button:disabled, .prompt-button:disabled{
     background-color: #cccccc;
     cursor: not-allowed;
 }
@@ -240,7 +240,7 @@ header h2 {
 }
 
 
-.template-container {
+.prompt-container {
     background-color: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -250,7 +250,7 @@ header h2 {
     padding: 20px;
 }
 
-textarea#template1, textarea#template2, textarea#template3 {
+textarea#prompt1, textarea#prompt2, textarea#prompt3 {
     width: 90%;
     height: 150px;
     padding: 10px;
@@ -260,7 +260,7 @@ textarea#template1, textarea#template2, textarea#template3 {
     resize: none;
     font-family: "Noto Sans KR", sans-serif;
 }
-.template-button {
+.prompt-button {
     height: 40px;
     background-color: #a1c9fa;
     color: white;
@@ -272,15 +272,15 @@ textarea#template1, textarea#template2, textarea#template3 {
     margin-top: 20px;
     width: 100%;
 }
-.template-button:hover {
+.prompt-button:hover {
     background-color: #9eabeb;
 }
 
-.template_title {
+.prompt-title {
     padding-bottom: 24px;
 }
 
-.original-template{
+.original-prompt{
     width: 90%;
     height: 150px;
     padding: 10px;
