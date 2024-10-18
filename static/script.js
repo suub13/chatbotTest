@@ -162,7 +162,6 @@ document.addEventListener('click', function(event) {
         const messageId = target.closest('.feedback-buttons').getAttribute('data-message-id');
         const feedbackContainer = target.closest('.feedback-buttons');
         const isSelected = target.classList.contains('selected');
-        console.log(isSelected);
 
         // 선택 해지 후 다른 옵션 선택 가능 기능
         
