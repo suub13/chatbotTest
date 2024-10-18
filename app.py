@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MySQL 설정
-app.config['MYSQL_HOST'] = 'mysql_db'
+app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
@@ -101,22 +101,47 @@ def restart_agent(num):
 chat_agents = dict()
 
 @app.route('/survey/type<int:typeNum>')
-def chatbot_type(typeNum):
+def render_chatbot_page(typeNum):
     session.clear()
-
     userid = request.args.get('userid')
-
-    chat_agent = restart_agent(typeNum)
-
+    
     if userid:
         session['userid'] = userid
-        if userid not in chat_agents:
-            chat_agents[userid] = {}
-        chat_agents[userid][f'chat_agent{typeNum}'] = chat_agent
+        session['typeNum'] = typeNum
+        return render_template(f'type{typeNum}.html', userid=userid)
     else:
         return jsonify({'error': '제공된 링크를 통해 접속해 주세요.'}), 400
+    
 
-    return render_template(f'type{typeNum}.html', userid=userid) 
+@app.route('/create_agent', methods=['POST'])
+def create_agent_route():
+    result = create_chat_agent()
+    return result
+
+
+def create_chat_agent(preset=None):
+    userid = session['userid']
+    typeNum = session['typeNum']
+    print(userid, typeNum)
+
+    # Check for necessary data
+    if not userid or not typeNum:
+        return jsonify({'error': 'Missing userid or typeNum'}), 400
+    
+    # Create or restart the chat agent
+    if preset:
+        chat_agent = restart_agent(typeNum, preset)
+    else:
+        chat_agent = restart_agent(typeNum)
+    
+    # Store the agent in chat_agents (based on userid and typeNum)
+    if userid not in chat_agents:
+        chat_agents[userid] = {}
+    
+    chat_agents[userid][f'chat_agent{typeNum}'] = chat_agent
+
+    # Return a success message
+    return jsonify({'message': 'Chat agent created successfully'}), 200
 
 
 conversation_types = {
@@ -136,6 +161,9 @@ def user_message(chatbot_number):
     cur = conn.cursor()
     
     conv_type = conversation_types[chatbot_number]
+
+    print(chatbot_number, conv_type, session)
+    
     if conv_type not in session:
         cur.execute("INSERT INTO conversations (user_id, chat_type) VALUES (%s, %s)", (userid, conv_type, ))
         conversation_id = cur.lastrowid
@@ -186,13 +214,15 @@ def bot_response(chatbot_number):
 
         cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
                     (conversation_id, 'bot', response))
+        message_id = cur.lastrowid  # Get the ID of the newly inserted message
     except:
         return jsonify({'error': 404})
     finally:
         cur.close()
         conn.commit()
 
-    return jsonify({'response': response})
+    return jsonify({'response': response, 'message_id': message_id})
+
 
 
 @app.route('/api/chatReload/<int:chatbot_number>', methods=['POST'])
@@ -206,6 +236,56 @@ def chat_reload(chatbot_number):
     chat_agents[userid][f'chat_agent{chatbot_number}'] = restart_agent(chatbot_number)
 
     return '', 204
+
+
+@app.route('/api/feedback', methods=['POST'])
+def update_feedback():
+    data = request.json
+    message_id = data.get('message_id')
+    feedback = data.get('feedback')
+
+    if not message_id or not feedback:
+        return jsonify({'error': 'Missing message ID or feedback'}), 400
+
+    # Update the feedback in the database
+    conn = mysql_db.connection
+    cur = conn.cursor()
+    
+    feedback_value = 1 if feedback == 'up' else -1
+
+    try:
+        cur.execute("UPDATE messages SET feedback = %s WHERE id = %s", (feedback_value, message_id))
+        conn.commit()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+
+    return jsonify({'message': 'Feedback updated successfully'}), 200
+
+
+@app.route('/api/feedback/remove', methods=['POST'])
+def remove_feedback():
+    data = request.json
+    message_id = data.get('message_id')
+
+    if not message_id:
+        return jsonify({'error': 'Missing message ID'}), 400
+
+    # Remove the feedback (set it to NULL or another suitable value)
+    conn = mysql_db.connection
+    cur = conn.cursor()
+
+    try:
+        cur.execute("UPDATE messages SET feedback = NULL WHERE id = %s", (message_id,))
+        conn.commit()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+
+    return jsonify({'message': 'Feedback removed successfully'}), 200
+
 
 
 @app.route('/reset_session', methods=['POST'])

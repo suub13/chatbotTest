@@ -85,7 +85,7 @@ header h2 {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     display: flex;
     justify-content: center;
-
+    padding: 20px 0px;
 }
 
 #main-container {
@@ -98,7 +98,7 @@ header h2 {
 
 #chat-container {
     min-width: 300px;
-    max-width: 1000px;
+    max-width: 600px;
     width: 70%;
     height: 100%;
     display: flex;
@@ -238,3 +238,76 @@ header h2 {
     font-size: 13px;
 }
 
+
+.message.bot {
+    position: relative;  /* Enables absolute positioning for feedback */
+    padding: 10px;       /* Adds padding around the message */
+    margin-bottom: 20px; /* Adds space between messages */
+    background-color: #e2e3e5;
+    border-radius: 10px;
+    max-width: 80%;
+    align-self: flex-start;
+    word-wrap: break-word;
+    clear: both;
+}
+
+.feedback-buttons {
+    position: absolute;
+    top: 8px;            /* Position at the top of the message */
+    right: 5px;          /* Position to the right edge */
+    display: flex;       /* Align the buttons next to each other*/
+    gap: 1px;            /* Adds space between the buttons */
+}
+
+.feedback-buttons i {
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    /* margin-left: 3px; */
+    color: #555;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    align-items:end;
+}
+
+
+.feedback-buttons i:hover {
+    color: #333;
+}
+
+/* Style when the user has selected a feedback option */
+.feedback-buttons i.selected {
+    font-weight: bold;
+    color: white;
+    border-radius: 12px;
+    background-color: #555;
+}
+
+i.fa-thumbs-up {
+    padding: 4px 2px 1px 2px;
+}
+
+i.fa-thumbs-down {
+    padding: 5px 2px 0px 2px;
+}
+
+
+
+/* Disable button */
+i.disabled, i.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Reset button to normal state */
+.feedback-buttons i.selected.remove {
+    background-color: none;
+    color: #555;
+}
+
+
+.message-content {
+    margin-right: 50px;  /* Adds space to the right to accommodate feedback buttons */
+}

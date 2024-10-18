@@ -8,8 +8,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <script>
         window.addEventListener('beforeunload', function() {
-            // 페이지를 떠나기 전에 세션 초기화를 위한 요청을 보냅니다.
-            navigator.sendBeacon('/reset_session');
+            resetSessionTimeout = setTimeout(() => {
+                navigator.sendBeacon('/reset_session');
+            }, 100);  // Adjust the delay as necessary
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const userid = "{{ userid }}";
+            const typeNum = 2;  // Type 1 고정
+
+            fetch('/create_agent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userid: userid,
+                    typeNum: typeNum
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    console.log(data.message);
+                    // 이후 작업 (예: 채팅 창 초기화 등)
+                }
+            })
+            .catch(error => {
+                console.error('Error creating chat agent:', error);
+            });
         });
     </script>
     
@@ -23,13 +51,6 @@
             {% else %}
             <p class="welcome-text"> user id 없음</p>
             {% endif %}
-           <!-- {% if email %}
-               <p class="welcome-text">{{ email }}</p>
-               <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>
-           {% else %}
-               <button class="auth-button" onclick="window.location.href='/login?action=login'">Login</button>
-               <button class="auth-button" onclick="window.location.href='/login?action=register'">Register</button>
-           {% endif %} -->
        </div>
     </header>
     <div class="container" id="separateBody">
@@ -52,5 +73,6 @@
         setupEventListeners(2);
         setupTextareaAdjustment(2);
     </script>
+    <script src="https://kit.fontawesome.com/4f25788d48.js" crossorigin="anonymous"></script>
 </body>
 </html>
