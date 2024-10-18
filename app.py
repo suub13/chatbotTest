@@ -50,13 +50,15 @@ def run_sql_script(script_path):
 run_sql_script('setup.sql')
 
 from llm.react_agentbarrack import ReActAgentBarrack
-from llm import presets  
-def restart_agent(num, preset=None):
+
+
+from llm import presets
+def restart_agent(num, prompt=None):
     preset_list = [presets.PRESET_A, presets.PRESET_B, presets.PRESET_C]
 
-    if preset:
+    if prompt:
         select_preset = preset_list[num-1]
-        select_preset['template'] = """Answer the following questions as best you can.\n""" + preset + """\n
+        select_preset['template'] = """Answer the following questions as best you can.\n""" + prompt + """\n
 You have access to the following tools:
 {tools}
 
@@ -79,17 +81,14 @@ Begin!
 Question: {input}
 Thought: {agent_scratchpad}
 """
-        
-        print(select_preset['template'])
-        print("\n\n\n")
 
         agent = ReActAgentBarrack(
-            presets=select_preset,
+            preset=select_preset,
             verbose = False,
         )
     else:
         agent = ReActAgentBarrack(
-            presets=preset_list[num-1],
+            preset=preset_list[num-1],
             verbose = False,
         )
 
@@ -135,6 +134,7 @@ chat_agents = dict()
 
 @app.route('/survey/type<int:typeNum>')
 def render_chatbot_page(typeNum):
+    session.clear()
     userid = request.args.get('userid')
     
     if userid:
@@ -259,8 +259,6 @@ def bot_response(typeNum):
     finally:
         cur.close()
         conn.commit()
-
-    print(chat_agent.get_chat())
 
     return jsonify({'response': response})
 

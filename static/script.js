@@ -166,6 +166,7 @@ async function setupPromptFormListener(typeNum) {
     messagesContainer.innerText = '';
 
     const responseMessage = document.getElementById(`response-message${typeNum}`);
+    responseMessage.innerText = '';
 
     const prompt = document.getElementById(`prompt${typeNum}`).value;  // textarea 값 가져오기
 
