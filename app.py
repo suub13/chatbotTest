@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MySQL 설정
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = 'mysql_db'
 app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
@@ -62,9 +62,9 @@ def restart_agent(num):
     )
 
     agent.make_tool_from_DocRetriever(
-        doc_path='assets/lost_passport_qna.txt',
-        name='lostpassports_qna-tool',
-        description='여권분실 관련 내용에 답변을 제시해야할 때 유용합니다.',
+        doc_path='assets/passport_qna.txt',
+        name='passports_qna-tool',
+        description='여권 관련 질문에 대한 답변을 제시해야할 때 유용합니다.',
         chunk_size=600,
         chunk_overlap=100,
     )
@@ -72,27 +72,67 @@ def restart_agent(num):
     agent.make_tool_from_DocRetriever(
         doc_path='assets/passport_petition_info.txt',
         name='passport_petition_info-tool',
-        description='여권에 민원에 대한 정보를 제시해야할 때 유용합니다.',
+        description='여권 최초 발급, 여권 재발급, 긴급여권, 여권 분실 신청 방법을 제시해야할 때 유용합니다.',
         chunk_size=600,
         chunk_overlap=120,
     )
 
     agent.make_tool_from_DocRetriever(
-        doc_path='assets/diplomatic_list.txt',
+        doc_path='assets/passport_diplomatic_list.txt',
         name='diplomatic_list-tool',
         description='영사관, 대사관에 대한 정보를 제시해야할 때 유용합니다.',
         chunk_size=350,
         chunk_overlap=50,
-    )
+        )
 
     agent.make_tool_from_DocRetriever(
         doc_path='assets/passport_laws_links.txt',
         name='passport_laws_links-tool',
         description='여권에 관련된 법률 링크를 제시해야할 때 유용합니다.',
+        chunk_size=250,
+        chunk_overlap=50,
+        )
+    
+    agent.make_tool_from_DocRetriever(
+        doc_path='assets/car_qna.txt',
+        name='car_qna-tool',
+        description='자동차 등록 또는 말소 질문에 대한 답변을 제시해야할 때 유용합니다.',
+        chunk_size=400,
+        chunk_overlap=75,
+    )
+
+    agent.make_tool_from_DocRetriever(
+        doc_path='assets/car_petition_info.txt',
+        name='car_petition_info-tool',
+        description='자동차의 등록, 폐차의 신청 방법을 제시해야할 때 유용합니다.',
+        chunk_size=800,
+        chunk_overlap=120,
+    )
+
+    agent.make_tool_from_DocRetriever(
+        doc_path='assets/car_registrar_list.txt',
+        name='car_registrar_list-tool',
+        description='자동차등록소의 주소와 전화번호를 제시해야할 때 유용합니다.',
+        chunk_size=150,
+        chunk_overlap=30,
+        )
+
+    agent.make_tool_from_DocRetriever(
+        doc_path='assets/car_junkyard_list.txt',
+        name='car_junkyard_list-tool',
+        description='폐차장의 주소와 전화번호를 제시해야할 때 유용합니다.',
         chunk_size=350,
         chunk_overlap=50,
-    )
-    
+        )
+
+    agent.make_tool_from_DocRetriever(
+        doc_path='assets/car_laws_links.txt',
+        name='car_laws_links-tool',
+        description='자동차에 관련된 법률 링크를 제시해야할 때 유용합니다.',
+        chunk_size=250,
+        chunk_overlap=50,
+        )
+
     agent.make_agent()
        
     return agent
