@@ -2,10 +2,8 @@ import time
 from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from flask_mysqldb import MySQL
 from flask_cors import CORS
-from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector  # MySQL 데이터베이스 설정을 위한 모듈
 from openai import OpenAI
-from llm import agentbarrack
 
 
 app = Flask(__name__)
@@ -18,7 +16,7 @@ app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
 
 mysql_db = MySQL(app)
-CORS(app, resources={r"/api/*": {"origins": "http://127.0.0.1:5000"}})
+CORS(app)
 
 
 def run_sql_script(script_path):
@@ -50,17 +48,12 @@ def run_sql_script(script_path):
 
 run_sql_script('setup.sql')
 
-chat_agent1 = None
-chat_agent2 = None
-chat_agent3 = None
-
 
 def restart_agent(num):
     from llm.react_agentbarrack import ReActAgentBarrack
     from llm import presets  
 
     preset_list = [presets.PRESET_A, presets.PRESET_B, presets.PRESET_C]
-
     agent = ReActAgentBarrack(
         presets=preset_list[num-1],
         verbose = False,
@@ -104,175 +97,125 @@ def restart_agent(num):
 
 
 
+chat_agents = dict()
+
+
 @app.route('/')
 def main():
-    email = session.get('email')  # 로그인된 사용자 이름을 세션에서 가져옴
-    return render_template('main.html', email=email)  # 메인 페이지 렌더링 시 사용자 이름을 전달
+    session.clear()
+    userid = request.args.get('userid')
+    if userid:
+        print(userid)
+        session['userid'] = userid
+
+        return render_template(f'main.html', userid=userid)
+    else:
+        return jsonify({'error': '제공된 링크를 통해 접속해 주세요.'}), 400
+    
+
+@app.route('/create_agent', methods=['POST'])
+def create_agent_route():
+    userid = session.get('userid')
+
+    if userid:
+        if userid not in chat_agents:
+            chat_agents[userid] = {}
+        chat_agents[userid]['chat_agent1']= restart_agent(1)
+        chat_agents[userid]['chat_agent2']= restart_agent(2)
+        chat_agents[userid]['chat_agent3']= restart_agent(3)
+        return jsonify({'message': 'Chat agent created successfully'}), 200
+
+    else: 
+        return jsonify({'error': 'Missing userid'}), 400
+
 
 conversation_types = {
-    1: 'conv1ID',
-    2: 'conv2ID',
-    3: 'conv3ID'
+    1: 'conv1',
+    2: 'conv2',
+    3: 'conv3'
 }
 
-@app.route('/api/botResponse/<int:chatbot_number>', methods=['POST'])
-def bot_response(chatbot_number):
-    # 로그인 되어 있는지 확인(되어있지 않으면 추후 자바스크립트에서 login 페이지로 redirect)
-    if not session.get('email', False):
-        return jsonify({'error': 'User not logged in'}), 401
+@app.route('/api/userMessage<int:typeNum>', methods=['POST'])
+def user_message(typeNum):    
+    userid = session.get('userid')
 
-    data = request.json
-    user_message = data.get('message')
+    user_message = request.json.get('message')
 
-    if chatbot_number == 1:
-        chat_agent = chat_agent1
-    elif chatbot_number == 2:
-        chat_agent = chat_agent2
-    elif chatbot_number == 3:
-        chat_agent = chat_agent3
-    else: 
-        return jsonify({'error': 'Invalid chatbot number'}), 400
-    
-    response = chat_agent.invoke_agent(user_message)
+    # DB연결
     conn = mysql_db.connection
     cur = conn.cursor()
-        # try:
-            # 사용자 이름과 이메일 중복 확인
     
-    conv_type = conversation_types[chatbot_number]
+    conv_type = conversation_types[typeNum]
     if conv_type not in session:
-        user_id = session['user_id']
-        cur.execute("INSERT INTO conversations (user_id, chat_type) VALUES (%s, %s)", (user_id, conv_type, ))
+        cur.execute("INSERT INTO conversations (user_id, chat_type) VALUES (%s, %s)", (userid, conv_type, ))
         conversation_id = cur.lastrowid
         session[conv_type] = conversation_id
-    else:
-        conversation_id = session[conv_type]
+        session.modified=True
+
+    else: 
+        conversation_id = session.get(conv_type)
 
     cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
         (conversation_id, 'user', user_message))
-    cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
-                (conversation_id, 'bot', response))
-
+    
     cur.close()
     conn.commit()
+    
+    return '', 204
+
+
+@app.route('/api/botResponse<int:typeNum>', methods=['POST'])
+def bot_response(typeNum):    
+    userid = session.get('userid')
+    print(typeNum)
+    if not userid:
+        return jsonify({'error': 'User ID not found in session'}), 400
+    
+    # 사용자 message 가져오기
+    user_message = request.json.get('message')
+
+    # agent 가져오기
+    chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
+    
+    response = chat_agent.invoke_agent(user_message)
+
+    # DB연결
+    conn = mysql_db.connection
+    cur = conn.cursor()
+    
+    # session에 conv_type: conversation_id로 되어 있음.
+    try: 
+        conv_type = conversation_types[typeNum] # conv1, conv2, conv3 중 
+        conversation_id = session.get(conv_type)
+        if conversation_id == None:
+            cur.execute(""" SELECT id FROM conversations WHERE user_id = %s AND chat_type = %s 
+            ORDER BY id DESC LIMIT 1;""", (userid, conv_type))
+            result = cur.fetchone()
+            conversation_id = result[0]
+
+        cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
+                    (conversation_id, 'bot', response))
+    except:
+        return jsonify({'error': 404})
+    finally:
+        cur.close()
+        conn.commit()
 
     return jsonify({'response': response})
 
 
-@app.route('/api/chatReload/<int:chatbot_number>', methods=['POST'])
-def chat_reload(chatbot_number):
-    print(session)
-    global chat_agent1, chat_agent2, chat_agent3
+@app.route('/api/chatReload/<int:typeNum>', methods=['POST'])
+def chat_reload(typeNum):
 
-    if chatbot_number not in [1, 2, 3]:
+    if typeNum not in [1, 2, 3]:
         return jsonify({'error': 'Invalid chatbot number'}), 400
     
-    session.pop(conversation_types[chatbot_number], None)
+    userid = session.get('userid')
 
-    if chatbot_number == 1:
-        chat_agent1 = restart_agent(chatbot_number)
-    elif chatbot_number == 2:
-        chat_agent2 = restart_agent(chatbot_number)
-    elif chatbot_number == 3:
-        chat_agent3 = restart_agent(chatbot_number)
-    
-    print(session)
+    chat_agents[userid][f'chat_agent{typeNum}'] = restart_agent(typeNum)
+
     return '', 204
 
-        
-    
-
-@app.route('/register', methods=['POST'])
-def register():
-    if request.method == 'POST':
-        name = request.form['name']
-        password = request.form['password']
-        sex = request.form['sex']
-        age = int(request.form['age'])
-        email = request.form['email']
-        print(name, password, sex, age, email)
-
-        # 해시 알고리즘을 명확히 지정
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        conn = mysql_db.connection
-        cur = conn.cursor()
-        # try:
-            # 사용자 이름과 이메일 중복 확인
-        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-        existing_user = cur.fetchone()
-        print(f'existing user: {existing_user}')
-
-        if existing_user:
-            flash('입력하신 이메일이 이미 존재합니다. 중복 확인을 해주세요.')
-            return render_template('login.html')
-
-        # 중복이 없을 경우에만 사용자 추가
-        cur.execute("INSERT INTO users (name, password, sex, age, email) VALUES (%s, %s, %s, %s, %s)",
-                    (name, hashed_password, sex, age, email))
-
-        conn.commit()
-        cur.close()
-        flash('회원가입을 환영합니다! 이제 로그인을 해주세요 ^^')
-        session['show_login'] = True
-        return redirect(url_for('login')+'?action=login')
-
-    return render_template('login.html')
-
-@app.route('/check_email')
-def check_email():
-    email = request.args.get('email')
-    cur = mysql_db.connection.cursor()
-    try:
-        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-        existing_user = cur.fetchone()
-        return {'exists': existing_user is not None}
-    except Exception as e:
-        return {'error': str(e)}, 500
-    finally:
-        cur.close()
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    print("login 들어옴")
-    if request.method == 'POST':
-        print("여기를 못들어와")
-        email = request.form['email']
-        password = request.form['password']
-        print(email,password)
-
-        cur = mysql_db.connection.cursor()
-        try:
-            cur.execute("SELECT * FROM users WHERE email = %s", [email])
-            user = cur.fetchone()
-            print(user)
-
-            if user is None:
-                flash('Email does not exist.', 'email_error')
-                return redirect(url_for('login', action='login'))
-
-            if check_password_hash(user[2], password):
-                session['user_id'] = user[0]
-                session['email'] = user[5]  
-                print("통과")
-                return redirect(url_for('main'))  # 메인 페이지로 리디렉션
-            else:
-                print("비밀번호 틀림")
-                flash('Invalid password.', 'password_error')
-                return redirect(url_for('login', action='login'))
-        except Exception as e:
-            flash('Database error: {}'.format(e))
-            return render_template('login.html')
-        finally:
-            cur.close()
-    return render_template('login.html')
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    print(f'로그아웃 후 {session}')
-    # session.pop('name', None)  # 로그아웃 시 세션에서 사용자 이름 제거
-    return redirect(url_for('main'))  # 메인 페이지로 리디렉션
 
 
 
@@ -284,9 +227,5 @@ def reset_session():
 
 
 if __name__ == '__main__':
-    chat_agent1 = restart_agent(1)
-    chat_agent2 = restart_agent(2)
-    chat_agent3 = restart_agent(3)
-    
     app.run(debug=True)
 

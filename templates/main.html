@@ -11,6 +11,31 @@
             // 페이지를 떠나기 전에 세션 초기화를 위한 요청을 보냅니다.
             navigator.sendBeacon('/reset_session');
         });
+        document.addEventListener('DOMContentLoaded', function() {
+            const userid = "{{ userid }}";
+
+            fetch('/create_agent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userid: userid,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    console.log(data.message);
+                    // 이후 작업 (예: 채팅 창 초기화 등)
+                }
+            })
+            .catch(error => {
+                console.error('Error creating chat agent:', error);
+            });
+        });
     </script>
     
 </head>
@@ -18,12 +43,8 @@
    <header>
        <h2 onclick="window.location.href='/'" style="margin-left:20px;">민원 Chatbot</h2>
        <div class="auth-buttons">
-           {% if email %}
-               <p class="welcome-text">{{ email }}</p>
-               <button class="auth-link" onclick="window.location.href='/logout'">Logout</button>
-           {% else %}
-               <button class="auth-button" onclick="window.location.href='/login?action=login'">Login</button>
-               <button class="auth-button" onclick="window.location.href='/login?action=register'">Register</button>
+           {% if userid %}
+               <p class="welcome-text">{{ userid }}</p>
            {% endif %}
        </div>
     </header>
@@ -68,7 +89,7 @@
             </div>
         </div>
     </div>
-    <script src="static/script1.js"></script>
+    <script src="static/script.js"></script>
     
 </body>
 </html>

@@ -149,7 +149,7 @@ class ReActAgentBarrack():
                   '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)))
 
             result = self.executor.invoke({"input": self.input})
-
+            print(result)
             if result.get('output') == 'Agent stopped due to iteration limit or time limit.':
                 intermediate_steps = result.get('intermediate_steps', [])
                 if intermediate_steps:
