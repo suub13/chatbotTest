@@ -6,7 +6,7 @@ PRESET_A = {
     'max_execution_time': 20,
     'template': """
     Answer the following questions as best you can.
-    You must answer in a narrative, one-line format.
+    You must answer in one simple sentence.
     All answers should be in Korean.
     You have access to the following tools:
     {tools}
@@ -72,9 +72,8 @@ PRESET_C = {
     'max_execution_time': 20,
     'template': """
     Answer the following questions as best you can.
-    You must answer in a narrative, one-line format.
+    You must answer in a few lines briefly.
     You must ask one or two questions to check if there is any missing information or considerations.
-    You need to understand the situation the human is in from previous conversations.
     All answers should be in Korean.
     You have access to the following tools:
     {tools}
@@ -97,5 +96,5 @@ PRESET_C = {
 
     Question: {input}
     Thought: {agent_scratchpad}
-    """,
+    """
 }
