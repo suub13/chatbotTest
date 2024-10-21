@@ -2,6 +2,7 @@ import time
 from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from flask_mysqldb import MySQL
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector  # MySQL 데이터베이스 설정을 위한 모듈
 from openai import OpenAI
 
@@ -54,6 +55,7 @@ def restart_agent(num):
     from llm import presets  
 
     preset_list = [presets.PRESET_A, presets.PRESET_B, presets.PRESET_C]
+
     agent = ReActAgentBarrack(
         presets=preset_list[num-1],
         verbose = False,
@@ -96,16 +98,14 @@ def restart_agent(num):
     return agent
 
 
-
 chat_agents = dict()
 
-
-@app.route('/')
-def main():
+@app.route('/survey')
+def render_chatbot_page():
     session.clear()
     userid = request.args.get('userid')
+    
     if userid:
-        print(userid)
         session['userid'] = userid
 
         return render_template(f'main.html', userid=userid)
@@ -119,14 +119,14 @@ def create_agent_route():
 
     if userid:
         if userid not in chat_agents:
-            chat_agents[userid] = {}
-        chat_agents[userid]['chat_agent1']= restart_agent(1)
-        chat_agents[userid]['chat_agent2']= restart_agent(2)
-        chat_agents[userid]['chat_agent3']= restart_agent(3)
+            chat_agents[userid] = {}    
+        chat_agents[userid]['chat_agent1'] = restart_agent(1)
+        chat_agents[userid]['chat_agent2'] = restart_agent(2)
+        chat_agents[userid]['chat_agent3'] = restart_agent(3)
         return jsonify({'message': 'Chat agent created successfully'}), 200
 
-    else: 
-        return jsonify({'error': 'Missing userid'}), 400
+    return jsonify({'error': 'Missing userid or typeNum'}), 400
+
 
 
 conversation_types = {
@@ -135,8 +135,8 @@ conversation_types = {
     3: 'conv3'
 }
 
-@app.route('/api/userMessage<int:typeNum>', methods=['POST'])
-def user_message(typeNum):    
+@app.route('/api/userMessage<int:chatbot_number>', methods=['POST'])
+def user_message(chatbot_number):    
     userid = session.get('userid')
 
     user_message = request.json.get('message')
@@ -145,7 +145,10 @@ def user_message(typeNum):
     conn = mysql_db.connection
     cur = conn.cursor()
     
-    conv_type = conversation_types[typeNum]
+    conv_type = conversation_types[chatbot_number]
+
+    print(chatbot_number, conv_type, session)
+    
     if conv_type not in session:
         cur.execute("INSERT INTO conversations (user_id, chat_type) VALUES (%s, %s)", (userid, conv_type, ))
         conversation_id = cur.lastrowid
@@ -164,10 +167,11 @@ def user_message(typeNum):
     return '', 204
 
 
-@app.route('/api/botResponse<int:typeNum>', methods=['POST'])
-def bot_response(typeNum):    
+
+@app.route('/api/botResponse<int:chatbot_number>', methods=['POST'])
+def bot_response(chatbot_number):    
     userid = session.get('userid')
-    print(typeNum)
+
     if not userid:
         return jsonify({'error': 'User ID not found in session'}), 400
     
@@ -175,7 +179,7 @@ def bot_response(typeNum):
     user_message = request.json.get('message')
 
     # agent 가져오기
-    chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
+    chat_agent = chat_agents[userid][f'chat_agent{chatbot_number}']
     
     response = chat_agent.invoke_agent(user_message)
 
@@ -185,7 +189,7 @@ def bot_response(typeNum):
     
     # session에 conv_type: conversation_id로 되어 있음.
     try: 
-        conv_type = conversation_types[typeNum] # conv1, conv2, conv3 중 
+        conv_type = conversation_types[chatbot_number] # conv1, conv2, conv3 중 
         conversation_id = session.get(conv_type)
         if conversation_id == None:
             cur.execute(""" SELECT id FROM conversations WHERE user_id = %s AND chat_type = %s 
@@ -195,24 +199,26 @@ def bot_response(typeNum):
 
         cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
                     (conversation_id, 'bot', response))
+        message_id = cur.lastrowid  # Get the ID of the newly inserted message
     except:
         return jsonify({'error': 404})
     finally:
         cur.close()
         conn.commit()
 
-    return jsonify({'response': response})
+    return jsonify({'response': response, 'message_id': message_id})
 
 
-@app.route('/api/chatReload/<int:typeNum>', methods=['POST'])
-def chat_reload(typeNum):
 
-    if typeNum not in [1, 2, 3]:
+@app.route('/api/chatReload/<int:chatbot_number>', methods=['POST'])
+def chat_reload(chatbot_number):
+
+    if chatbot_number not in [1, 2, 3]:
         return jsonify({'error': 'Invalid chatbot number'}), 400
     
     userid = session.get('userid')
 
-    chat_agents[userid][f'chat_agent{typeNum}'] = restart_agent(typeNum)
+    chat_agents[userid][f'chat_agent{chatbot_number}'] = restart_agent(chatbot_number)
 
     return '', 204
 
@@ -225,7 +231,5 @@ def reset_session():
     return '', 204  # No Content 응답
 
 
-
 if __name__ == '__main__':
     app.run(debug=True)
-
