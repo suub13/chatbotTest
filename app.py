@@ -57,7 +57,7 @@ def restart_agent(num):
     preset_list = [presets.PRESET_A, presets.PRESET_B, presets.PRESET_C]
 
     agent = ReActAgentBarrack(
-        presets=preset_list[num-1],
+        preset=preset_list[num-1],
         verbose = False,
     )
 
