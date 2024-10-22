@@ -266,8 +266,6 @@ def chat_reload(chatbot_number):
     return '', 204
 
 
-
-
 @app.route('/reset_session', methods=['POST'])
 def reset_session():
     session.clear()  # 세션을 초기화합니다.

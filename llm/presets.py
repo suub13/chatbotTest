@@ -78,7 +78,7 @@ PRESET_C = {
     'template': """
     Answer the following questions as best you can.
     You must answer in a narrative, one-line format.
-    You must ask one or two questions to check if there is any missing information.
+    Additionally, you must ask one or two questions to check if there is any missing information or considerations.
     All answers should be in Korean.
     You have access to the following tools:
     {tools}
