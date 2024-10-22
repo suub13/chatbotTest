@@ -9,7 +9,7 @@ import time
 import re
 from typing import List, Optional, Union
 
-# import presets
+import llm.presets as presets
 
 from operator import itemgetter
 
@@ -37,8 +37,8 @@ class ReActAgentBarrack():
             tools = []
         self.tools = tools
 
-        # if preset is None:
-        #     preset = presets.PRESET_DEFAULT
+        if preset is None:
+            preset = presets.PRESET_DEFAULT
         self.preset = preset
         print('Proceed with the provided preset: ', self.preset['preset_name'])
 
