@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MySQL 설정
-app.config['MYSQL_HOST'] = 'mysql_db'
+app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
@@ -96,7 +96,7 @@ def restart_agent(num):
     agent.make_tool_from_DocRetriever(
         doc_path='assets/car_qna.txt',
         name='car_qna-tool',
-        description='자동차 등록 또는 말소 질문에 대한 답변을 제시해야할 때 유용합니다.',
+        description='자동차 등록 또는 말소(폐차 포함) 질문에 대한 답변을 제시해야할 때 유용합니다.',
         chunk_size=400,
         chunk_overlap=75,
     )
@@ -257,6 +257,9 @@ def chat_reload(chatbot_number):
         return jsonify({'error': 'Invalid chatbot number'}), 400
     
     userid = session.get('userid')
+
+    conv_type = conversation_types[chatbot_number]
+    session.pop(conv_type, None)
 
     chat_agents[userid][f'chat_agent{chatbot_number}'] = restart_agent(chatbot_number)
 

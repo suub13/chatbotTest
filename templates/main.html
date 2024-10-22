@@ -10,7 +10,7 @@
         window.addEventListener('beforeunload', function() {
             resetSessionTimeout = setTimeout(() => {
                 navigator.sendBeacon('/reset_session');
-            }, 100);  // Adjust the delay as necessary
+            }, 1000);  // Adjust the delay as necessary
         });
         document.addEventListener('DOMContentLoaded', function() {
             const userid = "{{ userid }}";
@@ -49,7 +49,6 @@
            {% endif %}
        </div>
     </header>
-    <i>챗봇 '보내기' 버튼이 비활성화 되었다면 언어 모델이 로드중입니다.</i>
     <div class="container" id="separateBody">
         <div id="chat-container">
             <div id="chat-box">
