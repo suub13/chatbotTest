@@ -6,15 +6,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector  # MySQL 데이터베이스 설정을 위한 모듈
 from openai import OpenAI
 
+from config import Config
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MySQL 설정
-app.config['MYSQL_HOST'] = 'mysql_db'
-app.config['MYSQL_USER'] = 'subyou'
-app.config['MYSQL_PASSWORD'] = 'root'
-app.config['MYSQL_DB'] = 'chatbot'
+app.config.from_object(Config)
 
 mysql_db = MySQL(app)
 CORS(app)
