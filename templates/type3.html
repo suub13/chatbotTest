@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>설문 chatbot Type 2
-        
-    </title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <title>설문 chatbot Type 3</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         .alert {
@@ -60,7 +58,8 @@
 </head>
 <body>
    <header>
-       <h2 onclick="window.location.href='/survey'" style="margin-left:20px;">민원 Chatbot</h2>
+       <!-- <h2 onclick="redirectWithUserId(3)" style="margin-left:20px;">민원 Chatbot</h2> -->
+       <h2 style="margin-left:20px;">민원 Chatbot</h2>
        <div class="auth-buttons">
             {% if userid %}
             <p class="welcome-text">{{ userid }}</p>
@@ -85,9 +84,9 @@
             <div class="prompt-container">
                 <div id="prompt-div">
                     <div class="prompt-title">Prompt 수정</div>
-                    <div class="original-prompt">You must answer in a narrative, one-line format. <br>
-                        You must ask one or two questions to check if there is any missing information or considerations. <br>
-                        You need to understand the situation the human is in from previous conversations. <br>
+                    <div class="original-prompt">
+                        You must answer in a narrative, one-line format. <br>
+                        Additionally, you must ask one or two questions to check if there is any missing information or considerations. <br>
                         All answers should be in Korean.</div>
                     <div style="font-size: 20px;">⇩</div>
                     <textarea id="prompt3" name="prompt" rows="10" cols="30"></textarea><br>
@@ -97,7 +96,7 @@
             </div>
         </div>
     </div>
-    <script src="../static/script.js"></script>
+    <script src="../static/js/script.js"></script>
     <script>
         setupEventListeners(3);
         setupTextareaAdjustment(3);

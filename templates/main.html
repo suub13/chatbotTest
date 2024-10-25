@@ -24,42 +24,14 @@
         window.addEventListener('beforeunload', function() {
             resetSessionTimeout = setTimeout(() => {
                 navigator.sendBeacon('/reset_session');
-            }, 500);  // Adjust the delay as necessary
-        });
-        document.addEventListener('DOMContentLoaded', function() {
-            const userid = "{{ userid }}";
-            const typeNum = 1;  // Type 1 고정
-
-            fetch('/create_agent', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userid: userid,
-                    typeNum: typeNum
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    console.log(data.message);
-                    // 이후 작업 (예: 채팅 창 초기화 등)
-                }
-            })
-            .catch(error => {
-                console.error('Error creating chat agent:', error);
-            });
+            }, 100);  // Adjust the delay as necessary
         });
     </script>
     
 </head>
 <body>
    <header>
-       <!-- <h2 onclick="redirectWithUserId(1)" style="margin-left:20px;">민원 Chatbot</h2> -->
-       <h2 style="margin-left:20px;">민원 Chatbot</h2>
+       <h2 onclick="window.location.href='/survey'" style="margin-left:20px;">민원 Chatbot</h2>
        <div class="auth-buttons">
             {% if userid %}
             <p class="welcome-text">{{ userid }}</p>
@@ -84,8 +56,7 @@
             <div class="prompt-container">
                 <div id="prompt-div">
                     <div class="prompt-title">Prompt 수정</div>
-                    <div class="original-prompt">
-                        You must answer in a narrative, one-line format. <br>
+                    <div class="original-prompt">You must answer in a narrative, one-line format. <br>
                         All answers should be in Korean.</div>
                     <div style="font-size: 20px;">⇩</div>
                     <textarea id="prompt1" name="prompt" rows="10" cols="30"></textarea><br>
@@ -95,7 +66,7 @@
             </div>
         </div>
     </div>
-    <script src="/static/js/script.js"></script>
+    <script src="../static/js/script.js"></script>
     <script>
         setupEventListeners(1);
         setupTextareaAdjustment(1);

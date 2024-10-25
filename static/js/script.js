@@ -7,23 +7,30 @@ function setupEventListeners(typeNum) {
     // Reload 버튼 리스너
     document.getElementById(`reload-button${typeNum}`).addEventListener('click', () => reloadChat(typeNum));
     
-
     document.getElementById(`prompt-button${typeNum}`).addEventListener('click', () => setupPromptFormListener(typeNum));
 
-    document.getElementById(`prompt${typeNum}`).addEventListener('keydown', (event) => TempalteHandleKeyDown(event, typeNum));
+    document.getElementById(`prompt${typeNum}`).addEventListener('keydown', (event) => TemplateHandleKeyDown(event, typeNum));
 }
 
 
 function MessageHandleKeyDown(event, typeNum) {
-    if (event.key === 'Enter'&& !event.shiftKey) {
+    const sendButton = document.getElementById(`send-button${typeNum}`);
+    
+    // 버튼이 활성화 상태이고, Enter키를 누르되 shiftKey는 눌리지 않았을 때 실행
+    if (!sendButton.disabled && event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
         sendMessage(typeNum);
     }
 }
 
-function TempalteHandleKeyDown(event, typeNum) {
-    if (event.key === 'Enter'&& !event.shiftKey) {
+function TemplateHandleKeyDown(event, typeNum) {
+    const promptButton = document.getElementById(`prompt-button${typeNum}`);
+    
+    // 버튼이 활성화 상태이고, Enter키를 누르되 shiftKey는 눌리지 않았을 때 실행
+    if (!promptButton.disabled && event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
         setupPromptFormListener(typeNum);
-    } 
+    }
 }
 
 function sendMessage(typeNum) {
@@ -160,6 +167,7 @@ async function setupPromptFormListener(typeNum) {
     console.log("들어왔슘");
 
     // 버튼 비활성화
+    toggleInput(typeNum, false);
     promptToggleInput(typeNum, false);
 
     const messagesContainer = document.getElementById(`messages${typeNum}`);
@@ -194,9 +202,21 @@ async function setupPromptFormListener(typeNum) {
         responseMessage.innerText = '오류가 발생했습니다: ' + error.message;
     } finally {
         // 버튼 다시 활성화
+        toggleInput(typeNum, true);
         promptToggleInput(typeNum, true);
         console.log("끝났슘");
     }
 }
 
 
+function redirectWithUserId(typeNum) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userid = urlParams.get('userid');
+    if (userid) {
+        // userid를 새로운 URL에 추가하여 리디렉션
+        const newUrl = `/survey/type${typeNum}?userid=${userid}`;
+        window.location.href = newUrl;
+    } else {
+        alert('userid가 존재하지 않습니다.');
+    }
+}
