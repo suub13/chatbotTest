@@ -266,10 +266,11 @@ header h2 {
     cursor: pointer;
     /* margin-left: 3px; */
     color: #555;
-    width: 20px;
-    height: 20px;
-    text-align: center;
-    align-items:end;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 
@@ -282,31 +283,22 @@ header h2 {
     font-weight: bold;
     color: white;
     border-radius: 12px;
-    background-color: #555;
+    background-color: #333
 }
 
 i.fa-thumbs-up {
-    padding: 4px 2px 1px 2px;
+    padding: 2px;
 }
 
 i.fa-thumbs-down {
-    padding: 5px 2px 0px 2px;
+    padding: 2px;
 }
-
-
 
 /* Disable button */
-i.disabled, i.disabled {
+i.disabled {
     pointer-events: none;
-    opacity: 0.5;
+    /* opacity: 0.5; */
 }
-
-/* Reset button to normal state */
-.feedback-buttons i.selected.remove {
-    background-color: none;
-    color: #555;
-}
-
 
 .message-content {
     margin-right: 50px;  /* Adds space to the right to accommodate feedback buttons */
