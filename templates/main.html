@@ -3,28 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>설문 chatbot Type 1</title>
+    <title>설문 Main Page</title>
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
-    <style>
-        .alert {
-            display: none;
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+
     <script>
         window.addEventListener('beforeunload', function() {
             resetSessionTimeout = setTimeout(() => {
                 navigator.sendBeacon('/reset_session');
-            }, 100);  // Adjust the delay as necessary
+            }, 1000);  // Adjust the delay as necessary
         });
     </script>
     
@@ -32,44 +19,43 @@
 <body>
    <header>
        <h2 onclick="window.location.href='/survey'" style="margin-left:20px;">민원 Chatbot</h2>
-       <div class="auth-buttons">
-            {% if userid %}
-            <p class="welcome-text">{{ userid }}</p>
-            {% else %}
-            <p class="welcome-text"> user id 없음</p>
-            {% endif %}
-       </div>
     </header>
-    <div class="container" id="separateBody">
-        <div id="chat-container">
-            <div id="chat-box">
-                <div id="chat-header">
-                    <div id="chat-title">Type 1</div>
-                    <button id="reload-button1" class="reload-button">↺</button>
-                </div>
-                <div id="messages1" class="messages"></div>
-                <div id="input-container">
-                    <textarea id="chat-input1" class="chat-input" placeholder="메시지를 입력하세요..."></textarea>
-                    <button id="send-button1" class="send-button">▲</button>
-                </div>
-            </div>
-            <div class="prompt-container">
-                <div id="prompt-div">
-                    <div class="prompt-title">Prompt 수정</div>
-                    <div class="original-prompt">You must answer in a narrative, one-line format. <br>
-                        All answers should be in Korean.</div>
-                    <div style="font-size: 20px;">⇩</div>
-                    <textarea id="prompt1" name="prompt" rows="10" cols="30"></textarea><br>
-                    <button id="prompt-button1" class="prompt-button">수정하기</button>
-                </div>
-                <div id="response-message1"></div> <!-- 성공 메시지 표시할 공간 -->
+    <div class="container" id="separateBody" >
+        <div id="chat-container"style="justify-content: center;">
+            <div id="chat-box" style="width: 300px; box-shadow: None; border: None;">
+                사용자 ID<br>
+                <input type="text" id="useridInput" placeholder="Enter User ID">
+                <button onclick="setUserId()">Submit</button>
+                <span id="displayUserId"></span>
+                <!-- 각 링크에 userid 추가된 링크로 이동 -->
+                <a id="link1" href="#" onclick="goToLinkWithUserId('/survey/type1')">Go to Site 1 with UserID</a><br>
+                <a id="link2" href="#" onclick="goToLinkWithUserId('/survey/type2')">Go to Site 2 with UserID</a><br>
+                <a id="link3" href="#" onclick="goToLinkWithUserId('/survey/type3')">Go to Site 3 with UserID</a>
             </div>
         </div>
     </div>
+    <div>
+        <!-- 링크를 누르면 `userid` 값을 포함하여 이동 -->
+        <a id="useridLink" href="#">Go to Link with UserID</a>
+    </div>
     <script src="../static/js/script.js"></script>
     <script>
-        setupEventListeners(1);
-        setupTextareaAdjustment(1);
+        let userId = '';
+        function setUserId() {
+            // 입력된 userId를 변수에 저장하고 표시
+            userId = document.getElementById("useridInput").value;
+            document.getElementById("displayUserId").textContent = userId;
+        }
+
+        function goToLinkWithUserId(baseURL) {
+            if (userId) {
+                // 입력된 userId를 URL 파라미터로 추가
+                const targetUrl = `${baseURL}?userid=${encodeURIComponent(userId)}`;
+                window.location.href = targetUrl;
+            } else {
+                alert("Please enter a User ID first!");
+            }
+        }
     </script>
 </body>
 </html>

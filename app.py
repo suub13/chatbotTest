@@ -11,13 +11,18 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MySQL 설정
-app.config['MYSQL_HOST'] = 'mysql_db'
+app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
 
 mysql_db = MySQL(app)
 CORS(app)
+
+@app.route('/main')
+def main():
+    session.clear()
+    return render_template('main.html')
 
 
 def run_sql_script(script_path):
