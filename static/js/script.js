@@ -6,10 +6,38 @@ function setupEventListeners(chatbotNumber) {
     
     // Reload 버튼 리스너
     document.getElementById(`reload-button${chatbotNumber}`).addEventListener('click', () => reloadChat(chatbotNumber));
+
+    document.addEventListener('DOMContentLoaded', () => startLoadingModel(chatbotNumber));
 }
 
+function startLoadingModel(typeNum) {
+    toggleInput(typeNum, false); 
+
+    fetch('/create_agent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            console.log(data.message);
+            // Enable chat input once the agent is ready
+            toggleInput(typeNum, true);
+        }
+    })
+    .catch(error => {
+        console.error('Error creating chat agent:', error);
+    });
+}
+
+
 function handleKeyDown(event, chatbotNumber) {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // Prevent new line
         sendMessage(chatbotNumber);
     }
 }
@@ -101,6 +129,9 @@ async function callReload(chatbotNumber) {
 function toggleInput(chatbotNumber, enable) {
     const sendButton = document.getElementById(`send-button${chatbotNumber}`);
     sendButton.disabled = !enable; // 버튼 활성화/비활성화
+
+    const inputField = document.getElementById(`chat-input${chatbotNumber}`);
+    inputField.disabled = !enable;
 }
 
 function adjustTextareaHeight(textarea) {

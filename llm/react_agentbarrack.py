@@ -181,14 +181,13 @@ class ReActAgentBarrack():
             
             return result
         
-        def remove_first_english_sentence(text):
-            sentences = text.split('\n', 1)
-            first_sentence = sentences[0].strip()
-
-            if re.match(r'^[A-Za-z\s,.\'\"!?]+$', first_sentence):
-                return sentences[1].strip() if len(sentences) > 1 else ""
-            else:
-                return text
+        def remove_all_english_sentences(text):
+            sentences = re.split(r'(?<=[.!?])\s+', text)
+            filtered_sentences = [
+                sentence for sentence in sentences
+                if not re.match(r'^[\sA-Za-z0-9,.\'\"!?;:\-_()@#&]+$', sentence.strip())
+            ]
+            return ' '.join(filtered_sentences).strip()
 
         self.input = input
         
@@ -200,15 +199,19 @@ class ReActAgentBarrack():
                   '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)))
 
             result = self.executor.invoke({"input": self.input})
-
+            self.result = result
+            
             if (result.get('output') == 'Agent stopped due to iteration limit or time limit.') or ('assist' in result.get('output')):
                 intermediate_steps = result.get('intermediate_steps', [])
                 if intermediate_steps:
                     log_list = []
                     log_len = []
                     for step in intermediate_steps:
-                        log_list.append(step[0].log)
-                        log_len.append(len(step[0].log))
+                        log = step[0].log
+                        if 'Action Input: ' in log:
+                            continue
+                        log_list.append(log)
+                        log_len.append(len(log))
                     max_len_index = log_len.index(max(log_len))
                     output = log_list[max_len_index]
                 else:
@@ -224,7 +227,7 @@ class ReActAgentBarrack():
             repetition_count += 1
 
         output = remove_first_error_sentence(output)
-        output = remove_first_english_sentence(output)
+        output = remove_all_english_sentences(output)
 
         self.output = output
 
@@ -239,7 +242,14 @@ class ReActAgentBarrack():
             return self.memory.load_memory_variables({})["chat_history"]
         else:
             return self.memory
+        
+    def print_result_info(self):
+        print(f"input:\n{self.result['input']}\n")
+        print(f"output:\n{self.result['output']}\n")
+        print('intermediate_steps:')
+        for idx, step in enumerate(reversed((self.result['intermediate_steps']))):
+            print(f'step {idx}: {step[0].log}')
 
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')
-    print('2024.10.17.14:30')
+    print('2024.10.24.14:50')

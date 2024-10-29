@@ -19,6 +19,12 @@ app.config['MYSQL_DB'] = 'chatbot'
 mysql_db = MySQL(app)
 CORS(app)
 
+from flask import send_from_directory
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 def run_sql_script(script_path):
     with open(script_path, 'r') as file:
@@ -159,7 +165,7 @@ def create_agent_route():
     return result
 
 
-def create_chat_agent(preset=None):
+def create_chat_agent():
     userid = session['userid']
     typeNum = session['typeNum']
     print(userid, typeNum)
@@ -169,10 +175,7 @@ def create_chat_agent(preset=None):
         return jsonify({'error': 'Missing userid or typeNum'}), 400
     
     # Create or restart the chat agent
-    if preset:
-        chat_agent = restart_agent(typeNum, preset)
-    else:
-        chat_agent = restart_agent(typeNum)
+    chat_agent = restart_agent(typeNum)
     
     # Store the agent in chat_agents (based on userid and typeNum)
     if userid not in chat_agents:
@@ -235,6 +238,7 @@ def bot_response(chatbot_number):
 
     # agent 가져오기
     chat_agent = chat_agents[userid][f'chat_agent{chatbot_number}']
+    print(chat_agent.get_chat_history())
     
     response = chat_agent.invoke_agent(user_message)
 
@@ -272,6 +276,9 @@ def chat_reload(chatbot_number):
         return jsonify({'error': 'Invalid chatbot number'}), 400
     
     userid = session.get('userid')
+
+    conv_type = conversation_types[chatbot_number]
+    session.pop(conv_type, None)
 
     chat_agents[userid][f'chat_agent{chatbot_number}'] = restart_agent(chatbot_number)
 

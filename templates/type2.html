@@ -3,41 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>OCR & LLM</title>
+    <title>Chat Type 2</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    
     <script>
         window.addEventListener('beforeunload', function() {
             resetSessionTimeout = setTimeout(() => {
                 navigator.sendBeacon('/reset_session');
-            }, 100);  // Adjust the delay as necessary
-        });
-        document.addEventListener('DOMContentLoaded', function() {
-            const userid = "{{ userid }}";
-            const typeNum = 2;  // Type 1 고정
-
-            fetch('/create_agent', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userid: userid,
-                    typeNum: typeNum
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    console.log(data.message);
-                    // 이후 작업 (예: 채팅 창 초기화 등)
-                }
-            })
-            .catch(error => {
-                console.error('Error creating chat agent:', error);
-            });
+            }, 1000);  // Adjust the delay as necessary
         });
     </script>
     
