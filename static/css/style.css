@@ -16,7 +16,6 @@ header {
     display: flex;
     justify-content: left;  /* h2 태그를 가운데에 위치시키도록 설정 */
     align-items: center;
-    padding: 20px;
     /* background-color: #333; #FDDEAC*/
     background-color: white;
     height: 100px;
@@ -82,10 +81,11 @@ header h2 {
 }
 
 #separateBody {
+    width: 100%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     display: flex;
-    justify-content: space-between;
-
+    justify-content: center;
+    padding: 20px 0px;
 }
 
 #main-container {
@@ -97,7 +97,9 @@ header h2 {
 }
 
 #chat-container {
-    width: 300px;
+    min-width: 300px;
+    max-width: 600px;
+    width: 70%;
     height: 100%;
     display: flex;
     justify-content: center;
@@ -236,3 +238,67 @@ header h2 {
     font-size: 13px;
 }
 
+
+.message.bot {
+    position: relative;  /* Enables absolute positioning for feedback */
+    padding: 10px 8px 10px 10px;       /* Adds padding around the message */
+    margin-bottom: 20px; /* Adds space between messages */
+    background-color: #e2e3e5;
+    border-radius: 10px;
+    max-width: 80%;
+    align-self: flex-start;
+    word-wrap: break-word;
+    clear: both;
+}
+
+.feedback-buttons {
+    position: absolute;
+    top: 8px;            /* Position at the top of the message */
+    right: 5px;          /* Position to the right edge */
+    display: flex;       /* Align the buttons next to each other*/
+    gap: 1px;            /* Adds space between the buttons */
+}
+
+.feedback-buttons i {
+    background: none;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    /* margin-left: 3px; */
+    color: #555;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.feedback-buttons i:hover {
+    color: #333;
+}
+
+/* Style when the user has selected a feedback option */
+.feedback-buttons i.selected {
+    font-weight: bold;
+    color: white;
+    border-radius: 12px;
+    background-color: #333
+}
+
+i.fa-thumbs-up {
+    padding: 2px;
+}
+
+i.fa-thumbs-down {
+    padding: 2.5px 2px 1.5px 2px;
+}
+
+/* Disable button */
+i.disabled {
+    pointer-events: none;
+}
+
+.message-content {
+    margin-right: 42px;  /* Adds space to the right to accommodate feedback buttons */
+}

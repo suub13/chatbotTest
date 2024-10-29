@@ -1,0 +1,38 @@
+services:
+  web:
+    build: .
+    container_name: chatbot_flask
+    command: flask run --host=0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      MYSQL_HOST: mysql_db
+      MYSQL_USER: subyou
+      MYSQL_PASSWORD: root
+      MYSQL_DB: chatbot
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+
+  mysql_db:
+    image: mysql:8.0
+    container_name: chatbot_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chatbot
+      MYSQL_USER: subyou
+      MYSQL_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  mysql_data:

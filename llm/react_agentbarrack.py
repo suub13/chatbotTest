@@ -6,13 +6,14 @@ dotenv.load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 import time
+import re
 from typing import List, Optional, Union
+
+import llm.presets as presets
 
 from operator import itemgetter
 
 from langchain import PromptTemplate
-
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from langchain_core.tools.render import ToolsRenderer, render_text_description
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
@@ -27,44 +28,61 @@ from langchain.agents.output_parsers import ReActSingleInputOutputParser
 class ReActAgentBarrack():
     def __init__(
             self,
-            model_id='gpt-4o',
-            template='',
             tools=None,
-            verbose=False,
-            presets=None,
+            preset=None,
+            verbose=None,
             ):
+        
         if tools is None:
             tools = []
-        if presets is None:
-            print("No presets are provided, so we proceed with the defaults or input values.")
-        else:
-            template = presets['template']
-            print('Proceed with the provided preset: ', presets['preset_name'])
-        
-        self.llm = ChatOpenAI(model=model_id, temperature=0)
         self.tools = tools
-        self.template = template
-        self.prompt = PromptTemplate.from_template(self.template)
-        self.presets = presets
 
-        self.memory = ConversationBufferMemory(return_messages=False, memory_key="chat_history")
+        if preset is None:
+            preset = presets.PRESET_DEFAULT
+        self.preset = preset
+        print('Proceed with the provided preset: ', self.preset['preset_name'])
+
+        if verbose is None:
+            verbose = False
+        self.verbose =verbose
+
+        if 'gpt' in self.preset['model_id']:
+            from langchain_openai import ChatOpenAI
+            self.llm = ChatOpenAI(model=self.preset['model_id'], temperature=0)
+        else:
+            """
+            from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+
+            llm = HuggingFaceEndpoint(
+                repo_id="HuggingFaceH4/zephyr-7b-beta",
+                task="text-generation",
+                max_new_tokens=512,
+                do_sample=False,
+                repetition_penalty=1.03,
+            )
+            chat_model = ChatHuggingFace(llm=llm)
+            """
+            pass
+
+        self.prompt = PromptTemplate.from_template(self.preset['template'])
+        self.memory = None
+        if self.preset['memory'] == True:
+            self.memory = ConversationBufferMemory(return_messages=False, memory_key="chat_history")
+
         self.agent = None
         self.executor = None
-        self.verbose = verbose
 
         self.input = ''
         self.output = ''
 
-        
-
     def make_tool_from_DocRetriever(
             self, 
-            doc_path, 
+            doc_path : str, 
             name: str, 
             description: str,
             chunk_size=470,
             chunk_overlap=45,
-            embedding=OpenAIEmbeddings(model='text-embedding-3-large')):
+            model_name='text-embedding-3-large'):
 
         from langchain_community.document_loaders import TextLoader
         from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -75,8 +93,19 @@ class ReActAgentBarrack():
         data = TextLoader(doc_path, encoding='utf-8').load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         splits = text_splitter.split_documents(data)
+
+        if 'text-embedding' in model_name:
+            from langchain_openai import OpenAIEmbeddings
+            embeddings = OpenAIEmbeddings(model=model_name)
+        else:
+            """
+            from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+            embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+            """
+            pass
+        
         vectorstore = FAISS.from_documents(documents=splits, 
-                                           embedding=embedding,
+                                           embedding=embeddings,
                                            distance_strategy = DistanceStrategy.COSINE,
                                            )
         
@@ -90,55 +119,76 @@ class ReActAgentBarrack():
 
     def make_agent(
             self,
-            max_iterations: Optional[int] = 15,
-            max_execution_time: Optional[float] = None,
             output_parser: Optional[AgentOutputParser] = None,
             tools_renderer: ToolsRenderer = render_text_description,
             stop_sequence: Union[bool, List[str]] = True,
             ):
-        missing_vars = {"tools", "tool_names", "agent_scratchpad"}.difference(
-            self.prompt.input_variables + list(self.prompt.partial_variables)
-        )
-        if missing_vars:
-            raise ValueError(f"Prompt missing required variables: {missing_vars}")
-
-        prompt = self.prompt.partial(
-            tools=tools_renderer(list(self.tools)),
-            tool_names=", ".join([t.name for t in self.tools]),
-        )
-        if stop_sequence:
-            stop = ["\nObservation"] if stop_sequence is True else stop_sequence
-            llm_with_stop = self.llm.bind(stop=stop)
-        else:
-            llm_with_stop = self.llm
-        output_parser = output_parser or ReActSingleInputOutputParser()
         
-        self.agent = (
-            RunnablePassthrough.assign(
-                agent_scratchpad=lambda x: format_log_to_str(x["intermediate_steps"]),
-                chat_history=RunnableLambda(self.memory.load_memory_variables)
-                | itemgetter(self.memory.memory_key)
+        if self.preset['memory'] == True:
+            missing_vars = {"tools", "tool_names", "agent_scratchpad"}.difference(
+                self.prompt.input_variables + list(self.prompt.partial_variables)
             )
-            | prompt
-            | llm_with_stop
-            | output_parser
-        )
+            if missing_vars:
+                raise ValueError(f"Prompt missing required variables: {missing_vars}")
 
-        if self.presets is not None:
-            max_iterations = self.presets['max_iterations']
-            max_execution_time = self.presets['max_execution_time']
-
+            prompt = self.prompt.partial(
+                tools=tools_renderer(list(self.tools)),
+                tool_names=", ".join([t.name for t in self.tools]),
+            )
+            if stop_sequence:
+                stop = ["\nObservation"] if stop_sequence is True else stop_sequence
+                llm_with_stop = self.llm.bind(stop=stop)
+            else:
+                llm_with_stop = self.llm
+            output_parser = output_parser or ReActSingleInputOutputParser()
+            
+            self.agent = (
+                RunnablePassthrough.assign(
+                    agent_scratchpad=lambda x: format_log_to_str(x["intermediate_steps"]),
+                    chat_history=RunnableLambda(self.memory.load_memory_variables)
+                    | itemgetter(self.memory.memory_key)
+                )
+                | prompt
+                | llm_with_stop
+                | output_parser
+            )
+        else:
+            self.agent = create_react_agent(
+                    llm=self.llm,
+                    tools=self.tools,
+                    prompt=self.prompt,
+                    )
+            
         self.executor = AgentExecutor(
             agent=self.agent,
             tools=self.tools, 
             handle_parsing_errors=True,
-            max_iterations=max_iterations,
-            max_execution_time=max_execution_time,
+            max_iterations=self.preset['max_iterations'],
+            max_execution_time=self.preset['max_execution_time'],
             return_intermediate_steps=True,
             verbose=self.verbose, 
             )
 
     def invoke_agent(self, input):
+
+        def remove_first_error_sentence(text):
+            sentences = text.split('.')
+            first_sentence = sentences[0].strip()
+            
+            if "오류" in first_sentence or "error" in first_sentence:
+                sentences = sentences[1:]
+            result = '. '.join(sentences).strip()
+            
+            return result
+        
+        def remove_all_english_sentences(text):
+            sentences = re.split(r'(?<=[.!?])\s+', text)
+            filtered_sentences = [
+                sentence for sentence in sentences
+                if not re.match(r'^[\sA-Za-z0-9,.\'\"!?;:\-_()@#&]+$', sentence.strip())
+            ]
+            return ' '.join(filtered_sentences).strip()
+
         self.input = input
         
         output = 'Thought'
@@ -149,28 +199,23 @@ class ReActAgentBarrack():
                   '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)))
 
             result = self.executor.invoke({"input": self.input})
-
-            if result.get('output') == 'Agent stopped due to iteration limit or time limit.':
+            self.result = result
+            
+            if (result.get('output') == 'Agent stopped due to iteration limit or time limit.') or ('assist' in result.get('output')):
                 intermediate_steps = result.get('intermediate_steps', [])
                 if intermediate_steps:
-                    last_step_2 = intermediate_steps[-2]
-                    output_2 = last_step_2[0].log
-                    
-                    last_step_1 = intermediate_steps[-1]
-                    output_1 = last_step_1[0].log
-
-                    if len(output_2) > len(output_1):
-                        output = output_2
-                    else:
-                        output = output_1
+                    log_list = []
+                    log_len = []
+                    for step in intermediate_steps:
+                        log = step[0].log
+                        if 'Action Input: ' in log:
+                            continue
+                        log_list.append(log)
+                        log_len.append(len(log))
+                    max_len_index = log_len.index(max(log_len))
+                    output = log_list[max_len_index]
                 else:
                     output = 'Thought'
-
-            elif result.get('output') == "I'm sorry, but I can't assist with that request.":
-                intermediate_steps = result.get('intermediate_steps', [])
-                last_step = intermediate_steps[-1]
-                output = last_step[0].log
-
             else:
                 output = result.get('output')
             
@@ -181,15 +226,30 @@ class ReActAgentBarrack():
 
             repetition_count += 1
 
+        output = remove_first_error_sentence(output)
+        output = remove_all_english_sentences(output)
+
         self.output = output
-        self.memory.save_context(inputs={"human": self.input}, outputs={"ai": self.output})
+
+        if self.preset['memory'] == True:
+            self.memory.save_context(inputs={"human": self.input}, outputs={"ai": self.output})
 
         return self.output
     
 
-    def get_chat(self, ):
-        return self.memory.load_memory_variables({})["chat_history"]
+    def get_chat_history(self, ):
+        if self.preset['memory'] == True:
+            return self.memory.load_memory_variables({})["chat_history"]
+        else:
+            return self.memory
+        
+    def print_result_info(self):
+        print(f"input:\n{self.result['input']}\n")
+        print(f"output:\n{self.result['output']}\n")
+        print('intermediate_steps:')
+        for idx, step in enumerate(reversed((self.result['intermediate_steps']))):
+            print(f'step {idx}: {step[0].log}')
 
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')
-    print('2024.09.25.14:38')
+    print('2024.10.24.14:50')
