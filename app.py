@@ -267,6 +267,8 @@ def bot_response(typeNum):
 
     # agent 가져오기
     try:
+        if userid not in chat_agents:
+            chat_agents[userid] = {}
         chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
         print(chat_agent.get_chat_history())
     except: 
