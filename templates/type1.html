@@ -24,40 +24,17 @@
         window.addEventListener('beforeunload', function() {
             resetSessionTimeout = setTimeout(() => {
                 navigator.sendBeacon('/reset_session');
-            }, 500);  // Adjust the delay as necessary
-        });
-        document.addEventListener('DOMContentLoaded', function() {
-            const userid = "{{ userid }}";
-            const typeNum = 1;  // Type 1 고정
-
-            fetch('/create_agent', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userid: userid,
-                    typeNum: typeNum
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    console.log(data.message);
-                    // 이후 작업 (예: 채팅 창 초기화 등)
-                }
-            })
-            .catch(error => {
-                console.error('Error creating chat agent:', error);
-            });
+            }, 2000);  // Adjust the delay as necessary
         });
     </script>
     
 </head>
 <body>
    <header>
+        <div id="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <div id="loading-message">로딩 중입니다... 잠시만 기다려 주세요.</div>
+        </div>
        <!-- <h2 onclick="redirectWithUserId(1)" style="margin-left:20px;">민원 Chatbot</h2> -->
        <h2 style="margin-left:20px;">민원 Chatbot</h2>
        <div class="auth-buttons">

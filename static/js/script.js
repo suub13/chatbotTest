@@ -10,6 +10,36 @@ function setupEventListeners(typeNum) {
     document.getElementById(`prompt-button${typeNum}`).addEventListener('click', () => setupPromptFormListener(typeNum));
 
     document.getElementById(`prompt${typeNum}`).addEventListener('keydown', (event) => TemplateHandleKeyDown(event, typeNum));
+
+    document.addEventListener('DOMContentLoaded', () => startLoadingModel(typeNum));
+}
+
+
+function startLoadingModel(typeNum) {
+    toggleInput(typeNum, false); 
+    document.getElementById('loading-overlay').style.display = 'block';
+
+    fetch('/create_agent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            console.log(data.message);
+            // Enable chat input once the agent is ready
+            toggleInput(typeNum, true);
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error creating chat agent:', error);
+        document.getElementById('loading-overlay').style.display = 'none';
+    });
 }
 
 
@@ -35,6 +65,7 @@ function TemplateHandleKeyDown(event, typeNum) {
 
 function sendMessage(typeNum) {
     console.log(typeNum);
+    checkUserSession();
     const inputField = document.getElementById(`chat-input${typeNum}`);
     const message = inputField.value.trim();
     if (message !== '') {
@@ -45,6 +76,34 @@ function sendMessage(typeNum) {
         getChatbotResponse(typeNum, message); // 챗봇 응답 요청
     }
 }
+
+
+function checkUserSession() {
+    fetch('/check_user_session', {
+        method: 'GET',
+        credentials: 'include'  // 세션 쿠키를 포함하여 요청 전송
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('로그인이 필요합니다.');
+        }
+    })
+    .then(data => {
+        if (data.status === "logged_in") {
+            console.log("로그인된 상태입니다.");
+        }
+    })
+    .catch(error => {
+        console.error("세션 확인 중 오류 발생:", error);
+        // 페이지 리로드 또는 경고창 띄우기
+        if (confirm("로그인이 필요합니다. 페이지를 새로고침하시겠습니까?")) {
+            location.reload();
+        }
+    });
+}
+
 
 async function userMessageDB(typeNum, userMessage){
     try {

@@ -112,6 +112,7 @@ def restart_agent(num, prompt=None):
     Question: {input}
     Thought: {agent_scratchpad}
     """
+        print(select_preset['template'])
 
         agent = ReActAgentBarrack(
             preset=select_preset,
@@ -265,7 +266,12 @@ def bot_response(typeNum):
     user_message = request.json.get('message')
 
     # agent 가져오기
-    chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
+    try:
+        chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
+        print(chat_agent.get_chat_history())
+    except: 
+        chat_agent = restart_agent(typeNum)
+        chat_agents[userid][f'chat_agent{typeNum}']
     
     response = chat_agent.invoke_agent(user_message)
 
@@ -302,9 +308,20 @@ def chat_reload(typeNum):
     
     userid = session.get('userid')
 
+    conv_type = conversation_types[typeNum]
+    session.pop(conv_type, None)
+
     chat_agents[userid][f'chat_agent{typeNum}'] = restart_agent(typeNum)
 
     return '', 204
+
+
+@app.route('/check_user_session', methods=['GET'])
+def check_user_session():
+    if 'userid' in session:
+        return jsonify({"status": "logged_in"})
+    else:
+        return jsonify({"status": "not_logged_in"}), 401
 
 
 @app.route('/reset_session', methods=['POST'])
