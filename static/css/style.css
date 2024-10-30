@@ -303,7 +303,7 @@ i.disabled {
     margin-right: 42px;  /* Adds space to the right to accommodate feedback buttons */
 }
 
-/* #loading-overlay {
+#loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -344,4 +344,4 @@ i.disabled {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-} */
+}
