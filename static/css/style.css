@@ -116,7 +116,7 @@ header h2 {
     background-color: white;
     display: flex;
     flex-direction: column;
-    height: 600px;
+    height: 500px;
 }
 
 .messages {

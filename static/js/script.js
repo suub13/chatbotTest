@@ -13,7 +13,7 @@ function setupEventListeners(chatbotNumber) {
 // 처음 로딩 페이지 추가하려면 아래 function 에서 comment 처리 된 부분 해지 해야 함.
 function startLoadingModel(typeNum) {
     toggleInput(typeNum, false); 
-    // document.getElementById('loading-overlay').style.display = 'block';
+    document.getElementById('loading-overlay').style.display = 'block';
 
     fetch('/create_agent', {
         method: 'POST',
@@ -29,12 +29,12 @@ function startLoadingModel(typeNum) {
             console.log(data.message);
             // Enable chat input once the agent is ready
             toggleInput(typeNum, true);
-            // document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('loading-overlay').style.display = 'none';
         }
     })
     .catch(error => {
         console.error('Error creating chat agent:', error);
-        // document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('loading-overlay').style.display = 'none';
     });
 }
 
