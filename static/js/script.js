@@ -10,8 +10,10 @@ function setupEventListeners(chatbotNumber) {
     document.addEventListener('DOMContentLoaded', () => startLoadingModel(chatbotNumber));
 }
 
+// 처음 로딩 페이지 추가하려면 아래 function 에서 comment 처리 된 부분 해지 해야 함.
 function startLoadingModel(typeNum) {
     toggleInput(typeNum, false); 
+    // document.getElementById('loading-overlay').style.display = 'block';
 
     fetch('/create_agent', {
         method: 'POST',
@@ -27,10 +29,12 @@ function startLoadingModel(typeNum) {
             console.log(data.message);
             // Enable chat input once the agent is ready
             toggleInput(typeNum, true);
+            // document.getElementById('loading-overlay').style.display = 'none';
         }
     })
     .catch(error => {
         console.error('Error creating chat agent:', error);
+        // document.getElementById('loading-overlay').style.display = 'none';
     });
 }
 
@@ -164,16 +168,18 @@ function displayMessage(chatbotNumber, sender, message, messageId = null) {
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}`;
 
+
+
     if (sender === 'bot') {
         // Add thumbs up/down buttons with a data attribute for message ID
         messageElement.innerHTML = `
-            <div class="message-content">
-                ${message.replace(/\n/g, '<br>')}
-            </div>
-            <div class="feedback-buttons" data-message-id="${messageId}">
-                <i class="fa-solid fa-thumbs-up"></i>
-                <i class="fa-solid fa-thumbs-down"></i>
-            </div>
+                <div class="message-content">
+                    ${message.replace(/\n/g, '<br>')}
+                </div>
+                <div class="feedback-buttons" data-message-id="${messageId}">
+                    <i class="fa-solid fa-thumbs-up"></i>
+                    <i class="fa-solid fa-thumbs-down"></i>
+                </div>
         `;
     } else {
         messageElement.innerHTML = message.replace(/\n/g, '<br>');
