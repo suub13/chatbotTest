@@ -162,7 +162,17 @@ def render_chatbot_page(typeNum):
 
 @app.route('/create_agent', methods=['POST'])
 def create_agent_route():
-    result = create_chat_agent()
+    # Get userid and typeNum from the request JSON body
+    data = request.get_json()
+    userid = data.get('userid')
+    typeNum = data.get('typeNum')
+    
+    # Store userid and typeNum in the session
+    session['userid'] = userid
+    session['typeNum'] = typeNum
+    
+    result = create_chat_agent() 
+
     return result
 
 

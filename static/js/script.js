@@ -11,21 +11,20 @@ function setupEventListeners(chatbotNumber) {
 }
 
 // 처음 로딩 페이지 추가하려면 아래 function 에서 comment 처리 된 부분 해지 해야 함.
-async function startLoadingModel(typeNum) {
-
-    console.log("startloadingmodel")
-    const response = await fetch('/get_userid');
-    const data = await response.text();
-    console.log(data);
-
+function startLoadingModel(typeNum) {
     toggleInput(typeNum, false); 
     document.getElementById('loading-overlay').style.display = 'block';
+
+    // Extract userid from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const userid = urlParams.get('userid'); // Get 'userid' from the URL
 
     fetch('/create_agent', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ userid, typeNum }) // Include both userid and typeNum in the request body
     })
     .then(response => response.json())
     .then(data => {
