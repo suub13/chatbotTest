@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>설문 Main Page</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        window.addEventListener('beforeunload', function() {
+            resetSessionTimeout = setTimeout(() => {
+                navigator.sendBeacon('/reset_session');
+            }, 1000);  // Adjust the delay as necessary
+        });
+    </script>
+    
+</head>
+<body>
+   <header>
+       <h2 onclick="window.location.href='/survey'" style="margin-left:20px;">민원 Chatbot</h2>
+    </header>
+
+    <div>
+        <!-- Input field for UserID and submit button -->
+        <input type="text" id="useridInput" placeholder="Enter UserID">
+        <button id="submitButton">Submit</button>
+    </div>
+    
+    <!-- Initially hidden iframe -->
+    <iframe 
+        id="myIframe" 
+        src="" 
+        width="100%"
+        height="510px"
+        frameborder="0"
+        allowfullscreen
+        scrolling="no"
+        style="display: none;">
+    </iframe>
+    
+    <script>
+        // JavaScript to handle showing the iframe with the updated src
+        document.getElementById('submitButton').addEventListener('click', function() {
+            const userid = document.getElementById('useridInput').value;
+            
+            // Check if userid is provided
+            if (userid) {
+                // Update the iframe src and make it visible
+                const iframe = document.getElementById('myIframe');
+                iframe.src = `http://15.165.7.176:5000/survey/type3?userid=${userid}`;
+                iframe.style.display = "block"; // Show iframe
+            } else {
+                alert("Please enter a UserID.");
+            }
+        });
+    </script>
+
+    
+</body>
+</html>

@@ -8,7 +8,7 @@ from openai import OpenAI
 
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'my_secret_key'
 
 # MySQL 설정
 app.config['MYSQL_HOST'] = 'localhost'
@@ -23,6 +23,11 @@ CORS(app)
 def main():
     session.clear()
     return render_template('main.html')
+
+@app.route('/test')
+def test():
+    session.clear()
+    return render_template('test.html')
 
 
 def run_sql_script(script_path):
