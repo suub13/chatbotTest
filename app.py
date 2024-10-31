@@ -148,7 +148,8 @@ chat_agents = dict()
 
 @app.route('/survey/type<int:typeNum>')
 def render_chatbot_page(typeNum):
-    session.clear()
+    print("surve/type")
+    # session.clear()
     userid = request.args.get('userid')
     
     if userid:
@@ -333,6 +334,12 @@ def remove_feedback():
 
     return jsonify({'message': 'Feedback removed successfully'}), 200
 
+
+@app.route('/get_userid')
+def get_userid():
+    # Check if userid is in session
+    userid = session.get('userid')
+    return f"User ID in session: {userid}" if userid else "No User ID found in session."
 
 
 @app.route('/reset_session', methods=['POST'])
