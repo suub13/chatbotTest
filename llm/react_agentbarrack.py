@@ -181,7 +181,7 @@ class ReActAgentBarrack():
                 if i >= check_limit or not any(keyword in sentence for keyword in keywords)
             ]
             result = '. '.join(filtered_sentences)
-            if result and not result.endswith('.'):
+            if result and not result.endswith(('.', '?', '!', '~')):
                 result += '.'
             return result
         
@@ -219,10 +219,7 @@ class ReActAgentBarrack():
             result = self.executor.invoke({"input": self.input})
             self.result = result
 
-            if is_all_english(result.get('output')):
-                continue
-            
-            if contains_keywords(result.get('output')):
+            if contains_keywords(result.get('output')) or is_all_english(result.get('output')):
                 intermediate_steps = result.get('intermediate_steps', [])
                 if intermediate_steps:
                     log_list = []
@@ -247,7 +244,6 @@ class ReActAgentBarrack():
 
             repetition_count += 1
 
-        print(output)
         output = remove_error_sentences(output)
         output = remove_all_english_sentences(output)
 
@@ -274,4 +270,4 @@ class ReActAgentBarrack():
 
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')
-    print('2024.10.29.13:48')
+    print('2024.10.30.13:43')

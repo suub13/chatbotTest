@@ -15,9 +15,10 @@ function startLoadingModel(typeNum) {
     toggleInput(typeNum, false); 
     document.getElementById('loading-overlay').style.display = 'block';
 
-    // Extract userid from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const userid = urlParams.get('userid'); // Get 'userid' from the URL
+    const userid = urlParams.get('userid'); 
+
+    sessionStorage.setItem('userid',userid);
 
     fetch('/create_agent', {
         method: 'POST',
@@ -52,25 +53,30 @@ function handleKeyDown(event, chatbotNumber) {
 }
 
 function sendMessage(chatbotNumber) {
+    userid = sessionStorage.getItem('userid');
+
     const inputField = document.getElementById(`chat-input${chatbotNumber}`);
     const message = inputField.value.trim();
     if (message !== '') {
         displayMessage(chatbotNumber, 'user', message);
-        userMessageDB(chatbotNumber, message);
+        userMessageDB(userid, chatbotNumber, message);
         inputField.value = ''; // inputField 리셋
         toggleInput(chatbotNumber, false); // 입력 필드 비활성화
-        getChatbotResponse(chatbotNumber, message); // 챗봇 응답 요청
+        getChatbotResponse(userid, chatbotNumber, message); // 챗봇 응답 요청
     }
 }
 
-async function userMessageDB(chatbotNumber, userMessage){
+async function userMessageDB(userid, chatbotNumber, userMessage){
     try {
         const response = await fetch(`/api/userMessage${chatbotNumber}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ message: userMessage }),
+            body: JSON.stringify({ 
+                message: userMessage,
+                userid: userid
+            }),
         });
 
         if (!response.ok) {
@@ -83,13 +89,16 @@ async function userMessageDB(chatbotNumber, userMessage){
 
 
 
-function getChatbotResponse(chatbotNumber, userMessage) {
+function getChatbotResponse(userid, chatbotNumber, userMessage) {
     fetch(`/api/botResponse${chatbotNumber}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({ 
+            message: userMessage,
+            userid: userid
+         }),
     })
     .then(response => {
         return response.json();
@@ -107,24 +116,28 @@ function getChatbotResponse(chatbotNumber, userMessage) {
 }
 
 async function reloadChat(chatbotNumber) {
+    userid = sessionStorage.getItem('userid');
     console.log(`Reload button clicked for chatbot ${chatbotNumber}. Messages are being reloaded.`);
 
     // 메시지 영역 리셋
     const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
     
     toggleInput(chatbotNumber, false);
-    await callReload(chatbotNumber);
+    await callReload(userid, chatbotNumber);
     messagesContainer.innerHTML = '';
     toggleInput(chatbotNumber, true);
 }
 
-async function callReload(chatbotNumber) {
+async function callReload(userid, chatbotNumber) {
     try {
         const response = await fetch(`/api/chatReload/${chatbotNumber}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ 
+                userid: userid
+             }),
         });
 
         if (!response.ok) {
