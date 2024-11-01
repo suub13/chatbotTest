@@ -16,6 +16,11 @@ app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
 
+app.config.update(
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=True  # Set to False if not using HTTPS locally
+)
+
 mysql_db = MySQL(app)
 CORS(app)
 
@@ -153,8 +158,6 @@ def render_chatbot_page(typeNum):
     userid = request.args.get('userid')
     
     if userid:
-        session['userid'] = userid
-        session['typeNum'] = typeNum
         return render_template(f'type{typeNum}.html', userid=userid)
     else:
         return jsonify({'error': '제공된 링크를 통해 접속해 주세요.'}), 400
@@ -168,19 +171,12 @@ def create_agent_route():
     typeNum = data.get('typeNum')
     
     # Store userid and typeNum in the session
-    session['userid'] = userid
-    session['typeNum'] = typeNum
-
     result = create_chat_agent(userid, typeNum) 
 
     return result
 
 
 def create_chat_agent(userid, typeNum):
-    session_userid = session['userid']
-    session_typeNum = session['typeNum']
-    print(f'create session userid = {session_userid}')
-    print(f'create session typeNum = {session_typeNum}')
 
     # Check for necessary data
     if not userid or not typeNum:
@@ -209,12 +205,6 @@ conversation_types = {
 def user_message(chatbot_number):    
     userid = request.json.get('userid')
     user_message = request.json.get('message')
-
-    session_userid = session['userid']
-    session_typeNum = session['typeNum']
-    print(f'usermessage session userid = {session_userid}')
-    print(f'usermessage session typeNum = {session_typeNum}')
-
 
     # DB연결
     conn = mysql_db.connection
@@ -246,11 +236,6 @@ def user_message(chatbot_number):
 @app.route('/api/botResponse<int:chatbot_number>', methods=['POST'])
 def bot_response(chatbot_number):    
     userid = request.json.get('userid')
-
-    session_userid = session['userid']
-    session_typeNum = session['typeNum']
-    print(f'botresponse session userid = {session_userid}')
-    print(f'botresponse session typeNum = {session_typeNum}')
 
     if not userid:
         return jsonify({'error': 'User ID not found in session'}), 400
@@ -293,11 +278,6 @@ def bot_response(chatbot_number):
 
 @app.route('/api/chatReload/<int:chatbot_number>', methods=['POST'])
 def chat_reload(chatbot_number):
-
-    session_userid = session['userid']
-    session_typeNum = session['typeNum']
-    print(f'chat_reload session userid = {session_userid}')
-    print(f'chat_reload session typeNum = {session_typeNum}')
 
     if chatbot_number not in [1, 2, 3]:
         return jsonify({'error': 'Invalid chatbot number'}), 400
