@@ -153,8 +153,8 @@ def render_chatbot_page(typeNum):
     userid = request.args.get('userid')
     
     if userid:
-        # session['userid'] = userid
-        # session['typeNum'] = typeNum
+        session['userid'] = userid
+        session['typeNum'] = typeNum
         return render_template(f'type{typeNum}.html', userid=userid)
     else:
         return jsonify({'error': '제공된 링크를 통해 접속해 주세요.'}), 400
