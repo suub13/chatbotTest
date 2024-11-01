@@ -25,6 +25,7 @@ function startLoadingModel(typeNum) {
         headers: {
             'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ userid, typeNum }) // Include both userid and typeNum in the request body
     })
     .then(response => response.json())
@@ -73,6 +74,7 @@ async function userMessageDB(userid, chatbotNumber, userMessage){
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({ 
                 message: userMessage,
                 userid: userid
@@ -95,6 +97,7 @@ function getChatbotResponse(userid, chatbotNumber, userMessage) {
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ 
             message: userMessage,
             userid: userid
@@ -135,6 +138,7 @@ async function callReload(userid, chatbotNumber) {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({ 
                 userid: userid
              }),
@@ -289,6 +293,7 @@ async function sendFeedback(messageId, feedback) {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({ message_id: messageId, feedback: feedback }),
         });
 
@@ -307,6 +312,7 @@ async function removeFeedback(messageId) {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({ message_id: messageId }),
         });
 
