@@ -1,7 +1,30 @@
+import ast
+import os
+
+def parse_file_to_dict(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read().strip()
+    try:
+        result = ast.literal_eval(content)
+        return result
+    except (SyntaxError, ValueError) as e:
+        print(f"Error parsing file: {e}")
+        return None
+
+def read_list_from_txt(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = f.read().strip()
+    return ast.literal_eval(data)
+
+
+API_KYES = {
+    'google_maps_api_key': os.getenv('google_maps_api_key')
+}
 
 PRESET_DEFAULT = {
     'preset_name': 'PRESET_DEFAULT',
     'model_id': 'gpt-4o',
+    'openai_api_key': os.getenv('openai_api_key_default'),
     'max_iterations': 10,
     'max_execution_time': 20,
     'memory': False,
@@ -35,8 +58,9 @@ PRESET_DEFAULT = {
 PRESET_A = {
     'preset_name': 'PRESET_A',
     'model_id': 'gpt-4o',
-    'max_iterations': 10,
-    'max_execution_time': 20,
+    'openai_api_key': os.getenv('openai_api_key_a'),
+    'max_iterations': 8,
+    'max_execution_time': 15,
     'memory': False,
     'template': """
     Answer the following questions as best you can.
@@ -68,6 +92,7 @@ PRESET_A = {
 PRESET_B = {
     'preset_name': 'PRESET_B',
     'model_id': 'gpt-4o',
+    'openai_api_key': os.getenv('openai_api_key_b'),
     'max_iterations': 8,
     'max_execution_time': 15,
     'memory': True,
@@ -105,7 +130,8 @@ PRESET_B = {
 PRESET_C = {
     'preset_name': 'PRESET_C',
     'model_id': 'gpt-4o',
-    'max_iterations': 10,
+    'openai_api_key': os.getenv('openai_api_key_c'),
+    'max_iterations': 8,
     'max_execution_time': 20,
     'memory': True,
     'template': """
@@ -113,7 +139,7 @@ PRESET_C = {
     You must answer in one narrative sentence.
     Additionally, you must ask one or two questions to check if there is any missing information or considerations.
     You need to understand the situation the human is in from previous conversations if there are previous conversations.
-    All answers should be in Korean.
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
     You have access to the following tools:
     {tools}
 
@@ -131,9 +157,37 @@ PRESET_C = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
 
     Question: {input}
     Thought: {agent_scratchpad}
     """,
+}
+
+
+PRESET_ZS_DEFAULT = {
+    'preset_name': 'PRESET_ZS_DEFAULT',
+    'model_id': 'gpt-4o',
+    'openai_api_key': os.getenv('openai_api_key_zs_default'),
+    'memory': False,
+    'template': "You are a helpful assistant. Respond only in korean.",
+}
+
+TOOL_PRESET_JUNKYARD = {
+    'preset_name': 'TOOL_PRESET_JUNKYARD',
+    'tool_preset_name': 'find_closet_junkyard-tool',
+    'description': '현재 위치에서 가장 가까운 폐차장을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "인천 서구에서 가장 가까운 곳."의 경우 recommend_closest_place("인천 서구")',
+    'location_coordinates': parse_file_to_dict('./assets/geographic_coordinatesasd.txt'),
+    'target_places': parse_file_to_dict('./assets/junkyard_coordinatesasd.txt'),
+    'proofreading': read_list_from_txt('./assets/administrative_district_list.txt'),
+    'TOP': 3,
+}
+
+TOOL_PRESET_DIPLOMATIC = {
+    'preset_name': 'TOOL_PRESET_DIPLOMATIC',
+    'tool_preset_name': 'find_closet_diplomatic-tool',
+    'description': '현재 위치에서 가장 가까운 영사관 또는 대사관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "가마쿠라시에서 가장 가까운 곳."의 경우 recommend_closest_place("가마쿠라시")',
+    'target_places': parse_file_to_dict('./assets/diplomatic_coordinatesasd.txt'),
+    'TOP': 3,
 }

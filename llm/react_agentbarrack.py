@@ -1,10 +1,3 @@
-import os
-import dotenv
-import openai
-
-dotenv.load_dotenv()
-openai.api_key = os.getenv('OPENAI_API_KEY')
-
 import time
 import re
 from typing import List, Optional, Union
@@ -48,7 +41,11 @@ class ReActAgentBarrack():
 
         if 'gpt' in self.preset['model_id']:
             from langchain_openai import ChatOpenAI
-            self.llm = ChatOpenAI(model=self.preset['model_id'], temperature=0)
+            self.llm = ChatOpenAI(
+                model=self.preset['model_id'],
+                temperature=0,
+                openai_api_key=self.preset['openai_api_key'],
+                )
         else:
             """
             from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
@@ -75,6 +72,71 @@ class ReActAgentBarrack():
         self.input = ''
         self.output = ''
 
+    def make_tool_from_Function(
+            self,
+            name,
+            func,
+            description,
+            ):
+        from langchain.agents import Tool
+
+        function_tool = Tool(
+            name=name,
+            func=func,
+            description=description,
+        )
+        self.tools.append(function_tool)
+
+    def make_tool_from_ClosestFinder(
+            self,
+            preset,
+            ):
+        
+        def recommend_closest_place_online(current_location):
+            from geopy.distance import geodesic
+            import googlemaps
+            import presets
+            maps = googlemaps.Client(key=presets.API_KYES['google_maps_api_key'])
+            print('User Location: ', current_location)
+
+            geo_results = maps.geocode(current_location)
+            retry_count = 0
+            while not geo_results and retry_count < 3:
+                time.sleep(1)
+                geo_results = maps.geocode(current_location)
+                retry_count += 1
+
+            if geo_results:
+                geo_location = maps.geocode(current_location)[0].get('geometry')
+                user_location_coordinates = (geo_location['location']['lat'], geo_location['location']['lng'])
+                print(f"User Location Coordinates: {user_location_coordinates}")
+            else:
+                print('The closest one was not found.')
+                return '가까운 곳을 찾지 못 하였습니다.'
+            
+            location_with_distance = []
+            for name, coords in preset['target_places'].items():
+                distance = geodesic(user_location_coordinates, coords).km
+                location_with_distance.append((name, distance))
+                # print(f"Distance to {name}: {distance:.2f} km")
+            location_with_distance.sort(key=lambda x: x[1])
+            closest_places = location_with_distance[:3]
+            print('closest_places: ' + str(closest_places))
+
+            result = ', '.join(place[0] for place in closest_places)
+            return result
+        
+        print('Proceed with the provided preset: ', preset['preset_name'])
+
+        from langchain.agents import Tool
+        recommend_closest_place_tool = Tool(
+            name=preset['tool_preset_name'],
+            func=recommend_closest_place_online,
+            description=preset['description'],
+            )
+        
+        self.tools.append(recommend_closest_place_tool)
+
     def make_tool_from_DocRetriever(
             self, 
             doc_path : str, 
@@ -82,7 +144,8 @@ class ReActAgentBarrack():
             description: str,
             chunk_size=470,
             chunk_overlap=45,
-            model_name='text-embedding-3-large'):
+            model_name='text-embedding-3-large',
+            ):
 
         from langchain_community.document_loaders import TextLoader
         from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -96,7 +159,10 @@ class ReActAgentBarrack():
 
         if 'text-embedding' in model_name:
             from langchain_openai import OpenAIEmbeddings
-            embeddings = OpenAIEmbeddings(model=model_name)
+            embeddings = OpenAIEmbeddings(
+                model=model_name,
+                openai_api_key=self.preset['openai_api_key'],
+                )
         else:
             """
             from langchain_huggingface.embeddings import HuggingFaceEmbeddings
@@ -170,21 +236,28 @@ class ReActAgentBarrack():
             )
 
     def invoke_agent(self, input):
+        # 질문input의 내용을 삭제
+        def remove_question_lines(text):
+            lines = text.splitlines()
+            filtered_lines = [line for line in lines if not line.startswith('Question: ')]
+            return '\n'.join(filtered_lines)
+
         # 특정 단어들이 문장 안에 있을 경우 그 문장을 삭제
         def remove_error_sentences(text, n=3):
-            keywords = ['죄송합니다', 'sorry', 'format', '포맷', '오류', 'error']
-            sentences = text.split('. ')
-            # 검사할 문장 수를 결정: 전체 문장이 n개 미만이면 2개까지만 검사
+            keywords = ['죄송', 'sorry', 'format', '포맷', '오류', 'error']
+            sentences = re.findall(r'([^.,!?]+[.,!?]?)', text)
             check_limit = min(len(sentences), max(2, n))
+            
             filtered_sentences = [
-                sentence for i, sentence in enumerate(sentences) 
+                sentence for i, sentence in enumerate(sentences)
                 if i >= check_limit or not any(keyword in sentence for keyword in keywords)
             ]
-            result = '. '.join(filtered_sentences)
+            
+            result = ''.join(filtered_sentences).strip()
             if result and not result.endswith(('.', '?', '!', '~')):
                 result += '.'
             return result
-        
+            
         # 영어문장이 있을 경우 그 문장을 삭제
         def remove_all_english_sentences(text):
             sentences = re.split(r'(?<=[.!?])\s+', text)
@@ -208,52 +281,54 @@ class ReActAgentBarrack():
             return True
 
         self.input = input
-        
-        output = 'Thought'
         repetition_count = 0
-        while 'Thought' in output:
+        while True:
             start_time = time.time()
             print('repetition_count: ', repetition_count,
                   '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)))
-
+            
             result = self.executor.invoke({"input": self.input})
             self.result = result
 
-            if contains_keywords(result.get('output')) or is_all_english(result.get('output')):
+            if contains_keywords(result.get('output')):
                 intermediate_steps = result.get('intermediate_steps', [])
-                if intermediate_steps:
-                    log_list = []
-                    log_len = []
-                    for step in intermediate_steps:
-                        log = step[0].log
-                        if 'Action Input: ' in log:
-                            continue
-                        log_list.append(log)
-                        log_len.append(len(log))
+                log_list = []
+                log_len = []
+                for step in intermediate_steps:
+                    log = step[0].log
+                    if ('Action Input: ' in log) or ('Question: ' in log) or is_all_english(log):
+                        continue
+                    log_list.append(log)
+                    log_len.append(len(log))
+                
+                if len(log_len) == 0:
+                    output = ''
+                else:
                     max_len_index = log_len.index(max(log_len))
                     output = log_list[max_len_index]
-                else:
-                    output = 'Thought'
             else:
                 output = result.get('output')
-            
-            end_time = time.time()
-            print('repetition_count: ', repetition_count,
-                  '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)),
-                  '\tElapsed time: {:.2f}'.format(end_time - start_time))
 
-            repetition_count += 1
-
+            if not output or is_all_english(output):
+                print('Repeat again because all sentences are in English.')
+                end_time = time.time()
+                print('repetition_count: ', repetition_count,
+                    '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)),
+                    '\tElapsed time: {:.2f}'.format(end_time - start_time))
+                repetition_count += 1
+            else:
+                break
+        
         output = remove_error_sentences(output)
         output = remove_all_english_sentences(output)
+        output = remove_question_lines(output)
 
-        self.output = output
+        self.output = output.replace('Thought: ', '').replace('; ', '. ')
 
         if self.preset['memory'] == True:
             self.memory.save_context(inputs={"human": self.input}, outputs={"ai": self.output})
 
         return self.output
-    
 
     def get_chat_history(self, ):
         if self.preset['memory'] == True:
@@ -270,4 +345,4 @@ class ReActAgentBarrack():
 
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')
-    print('2024.10.30.13:43')
+    print('2024.11.04.10:20')
