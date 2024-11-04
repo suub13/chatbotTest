@@ -1,5 +1,5 @@
 import time
-from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
 from flask_mysqldb import MySQL
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,10 +16,6 @@ app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
 
-app.config.update(
-    SESSION_COOKIE_SAMESITE="None",
-    SESSION_COOKIE_SECURE=True  # Set to False if not using HTTPS locally
-)
 
 mysql_db = MySQL(app)
 CORS(app)
@@ -72,44 +68,8 @@ def restart_agent(num):
         verbose = False,
     )
 
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/car_qna.txt',
-        name='car_qna-tool',
-        description='자동차 등록 또는 말소 질문에 대한 답변을 제시해야할 때 유용합니다.',
-        chunk_size=400,
-        chunk_overlap=75,
-    )
-
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/car_petition_info.txt',
-        name='car_petition_info-tool',
-        description='자동차의 등록, 폐차의 신청 방법을 제시해야할 때 유용합니다.',
-        chunk_size=800,
-        chunk_overlap=120,
-    )
-
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/car_registrar_list.txt',
-        name='car_registrar_list-tool',
-        description='자동차등록소의 주소와 전화번호를 제시해야할 때 유용합니다.',
-        chunk_size=150,
-        chunk_overlap=30,
-    )
-
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/car_junkyard_list.txt',
-        name='car_junkyard_list-tool',
-        description='폐차장의 주소와 전화번호를 제시해야할 때 유용합니다.',
-        chunk_size=350,
-        chunk_overlap=50,
-    )
-
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/car_laws_links.txt',
-        name='car_laws_links-tool',
-        description='자동차에 관련된 법률 링크를 제시해야할 때 유용합니다.',
-        chunk_size=250,
-        chunk_overlap=50,
+    agent.make_tool_from_ClosestFinder(
+        preset=presets.TOOL_PRESET_DIPLOMATIC,
     )
 
     agent.make_tool_from_DocRetriever(
@@ -134,7 +94,7 @@ def restart_agent(num):
         description='영사관, 대사관에 대한 정보를 제시해야할 때 유용합니다.',
         chunk_size=350,
         chunk_overlap=50,
-    )
+        )
 
     agent.make_tool_from_DocRetriever(
         doc_path='assets/passport_laws_links.txt',
@@ -142,7 +102,7 @@ def restart_agent(num):
         description='여권에 관련된 법률 링크를 제시해야할 때 유용합니다.',
         chunk_size=250,
         chunk_overlap=50,
-    )
+        )
     
     agent.make_agent()
        
@@ -153,8 +113,6 @@ chat_agents = dict()
 
 @app.route('/survey/type<int:typeNum>')
 def render_chatbot_page(typeNum):
-    print("surve/type")
-    # session.clear()
     userid = request.args.get('userid')
     
     if userid:
@@ -170,7 +128,6 @@ def create_agent_route():
     userid = data.get('userid')
     typeNum = data.get('typeNum')
     
-    # Store userid and typeNum in the session
     result = create_chat_agent(userid, typeNum) 
 
     return result
@@ -212,7 +169,6 @@ def user_message(chatbot_number):
     
     conv_type = conversation_types[chatbot_number]
     conv_id = request.json.get('conv_id')
-    print(conv_id)
     
     if conv_id is None:
         cur.execute("INSERT INTO conversations (user_id, chat_type) VALUES (%s, %s)", (userid, conv_type, ))
@@ -240,7 +196,6 @@ def bot_response(chatbot_number):
 
     # agent 가져오기
     chat_agent = chat_agents[userid][f'chat_agent{chatbot_number}']
-    print(chat_agent.get_chat_history())
     
     response = chat_agent.invoke_agent(user_message)
 
@@ -248,7 +203,6 @@ def bot_response(chatbot_number):
     conn = mysql_db.connection
     cur = conn.cursor()
     
-    # session에 conv_type: conv_id로 되어 있음.
     try: 
         conv_type = conversation_types[chatbot_number] # conv1, conv2, conv3 중 
         conv_id = request.json.get('conv_id')
@@ -331,12 +285,6 @@ def remove_feedback():
         cur.close()
 
     return jsonify({'message': 'Feedback removed successfully'}), 200
-
-
-@app.route('/reset_session', methods=['POST'])
-def reset_session():
-    session.clear()  # 세션을 초기화합니다.
-    return '', 204  # No Content 응답
 
 
 if __name__ == '__main__':

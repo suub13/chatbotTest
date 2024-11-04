@@ -164,6 +164,7 @@ function getChatbotResponse(userid, chatbotNumber, userMessage) {
 async function reloadChat(chatbotNumber) {
     userid = sessionStorage.getItem('userid');
     console.log(`Reload button clicked for chatbot ${chatbotNumber}. Messages are being reloaded.`);
+    document.getElementById('loading-overlay').style.display = 'block';
 
     // 메시지 영역 리셋
     const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
@@ -174,6 +175,7 @@ async function reloadChat(chatbotNumber) {
     toggleInput(chatbotNumber, true);
 
     sessionStorage.removeItem(`convType${chatbotNumber}`);
+    document.getElementById('loading-overlay').style.display = 'none';
 }
 
 async function callReload(userid, chatbotNumber) {
@@ -240,40 +242,6 @@ document.addEventListener('click', function(event) {
         const messageId = target.closest('.feedback-buttons').getAttribute('data-message-id');
         const feedbackContainer = target.closest('.feedback-buttons');
         const isSelected = target.classList.contains('selected');
-
-        // 선택 해지 후 다른 옵션 선택 가능 기능
-        
-        // if (messageId) {
-        //     if (isSelected) {
-        //         // If the clicked button is already selected, deselect it
-        //         target.classList.remove('selected');
-                
-        //         // Re-enable both buttons after deselection
-        //         feedbackContainer.querySelector('.fa-thumbs-up').classList.remove('disabled');
-        //         feedbackContainer.querySelector('.fa-thumbs-down').classList.remove('disabled');
-
-        //         // Remove the feedback
-        //         removeFeedback(messageId);
-        //     } else {
-        //         // If no button is selected, select the clicked one and disable the other
-        //         target.classList.add('selected');
-                
-        //         if (feedback === 'up') {
-        //             // Disable thumbs-down but keep thumbs-up enabled for deselection
-        //             feedbackContainer.querySelector('.fa-thumbs-down').classList.add('disabled');
-        //             feedbackContainer.querySelector('.fa-thumbs-up').classList.remove('disabled');
-        //         } else {
-        //             // Disable thumbs-up but keep thumbs-down enabled for deselection
-        //             feedbackContainer.querySelector('.fa-thumbs-up').classList.add('disabled');
-        //             feedbackContainer.querySelector('.fa-thumbs-down').classList.remove('disabled');
-        //         }
-
-        //         // Send the feedback to the server
-        //         sendFeedback(messageId, feedback);
-        //     }
-        // }
-
-        // 무조건 선택: select one or the other once you choose.
 
         if (messageId) {
             if (feedback === 'up'){
