@@ -12,13 +12,14 @@ function setupEventListeners(chatbotNumber) {
 
 // 처음 로딩 페이지 추가하려면 아래 function 에서 comment 처리 된 부분 해지 해야 함.
 function startLoadingModel(typeNum) {
+    sessionStorage.clear();
     toggleInput(typeNum, false); 
     document.getElementById('loading-overlay').style.display = 'block';
 
     const urlParams = new URLSearchParams(window.location.search);
     const userid = urlParams.get('userid'); 
 
-    sessionStorage.setItem('userid',userid);
+    sessionStorage.setItem('userid',userid); 
 
     fetch('/create_agent', {
         method: 'POST',
@@ -67,7 +68,35 @@ function sendMessage(chatbotNumber) {
     }
 }
 
-async function userMessageDB(userid, chatbotNumber, userMessage){
+
+function displayMessage(chatbotNumber, sender, message, messageId = null) {
+    const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${sender}`;
+
+    if (sender === 'bot') {
+        // Add thumbs up/down buttons with a data attribute for message ID
+        messageElement.innerHTML = `
+                <div class="message-content">
+                    ${message.replace(/\n/g, '<br>')}
+                </div>
+                <div class="feedback-buttons" data-message-id="${messageId}">
+                    <i class="fa-solid fa-thumbs-up"></i>
+                    <i class="fa-solid fa-thumbs-down"></i>
+                </div>
+        `;
+    } else {
+        messageElement.innerHTML = message.replace(/\n/g, '<br>');
+    }
+
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
+}
+
+
+async function userMessageDB(userid, chatbotNumber, userMessage) {
+    let conv_id = sessionStorage.getItem(`convType${chatbotNumber}`);
+
     try {
         const response = await fetch(`/api/userMessage${chatbotNumber}`, {
             method: 'POST',
@@ -77,21 +106,31 @@ async function userMessageDB(userid, chatbotNumber, userMessage){
             credentials: 'include',
             body: JSON.stringify({ 
                 message: userMessage,
-                userid: userid
+                userid: userid,
+                conv_id: conv_id
             }),
         });
 
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
+
+        // Extract conv_id from response
+        const data = await response.json();
+        conv_id = data.conv_id;
+
+        // Save conv_id to sessionStorage
+        sessionStorage.setItem(`convType${chatbotNumber}`, conv_id);
+
     } catch (error) {
         console.error('Error fetching Python function result:', error);
     }
 }
 
 
-
 function getChatbotResponse(userid, chatbotNumber, userMessage) {
+    let conv_id = sessionStorage.getItem(`convType${chatbotNumber}`);
+
     fetch(`/api/botResponse${chatbotNumber}`, {
         method: 'POST',
         headers: {
@@ -100,7 +139,8 @@ function getChatbotResponse(userid, chatbotNumber, userMessage) {
         credentials: 'include',
         body: JSON.stringify({ 
             message: userMessage,
-            userid: userid
+            userid: userid,
+            conv_id: conv_id,
          }),
     })
     .then(response => {
@@ -112,6 +152,9 @@ function getChatbotResponse(userid, chatbotNumber, userMessage) {
         console.log('Result:', botResponse); // 결과 출력
         displayMessage(chatbotNumber, 'bot', botResponse, messageId); // 봇 응답 출력
         toggleInput(chatbotNumber, true); // 입력 필드 활성화
+
+        conv_id = data.conv_id;
+        sessionStorage.setItem(`convType${chatbotNumber}`, conv_id);
     })
     .catch(error => {
         console.error('Error:', error);
@@ -129,6 +172,8 @@ async function reloadChat(chatbotNumber) {
     await callReload(userid, chatbotNumber);
     messagesContainer.innerHTML = '';
     toggleInput(chatbotNumber, true);
+
+    sessionStorage.removeItem(`convType${chatbotNumber}`);
 }
 
 async function callReload(userid, chatbotNumber) {
@@ -184,32 +229,6 @@ function setupTextareaAdjustment(chatbotNumber) {
     adjustTextareaHeight(chatInput); // 초기 높이 조정
 }
 
-
-function displayMessage(chatbotNumber, sender, message, messageId = null) {
-    const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${sender}`;
-
-
-
-    if (sender === 'bot') {
-        // Add thumbs up/down buttons with a data attribute for message ID
-        messageElement.innerHTML = `
-                <div class="message-content">
-                    ${message.replace(/\n/g, '<br>')}
-                </div>
-                <div class="feedback-buttons" data-message-id="${messageId}">
-                    <i class="fa-solid fa-thumbs-up"></i>
-                    <i class="fa-solid fa-thumbs-down"></i>
-                </div>
-        `;
-    } else {
-        messageElement.innerHTML = message.replace(/\n/g, '<br>');
-    }
-
-    messagesContainer.appendChild(messageElement);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
-}
 
 
 

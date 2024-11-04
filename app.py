@@ -211,25 +211,20 @@ def user_message(chatbot_number):
     cur = conn.cursor()
     
     conv_type = conversation_types[chatbot_number]
-
-    print(chatbot_number, conv_type, session)
+    conv_id = request.json.get('conv_id')
+    print(conv_id)
     
-    if conv_type not in session:
+    if conv_id is None:
         cur.execute("INSERT INTO conversations (user_id, chat_type) VALUES (%s, %s)", (userid, conv_type, ))
-        conversation_id = cur.lastrowid
-        session[conv_type] = conversation_id
-        session.modified=True
-
-    else: 
-        conversation_id = session.get(conv_type)
+        conv_id = cur.lastrowid
 
     cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
-        (conversation_id, 'user', user_message))
+        (conv_id, 'user', user_message))
     
     cur.close()
     conn.commit()
     
-    return '', 204
+    return jsonify({'conv_id': conv_id}), 200
 
 
 
@@ -253,18 +248,18 @@ def bot_response(chatbot_number):
     conn = mysql_db.connection
     cur = conn.cursor()
     
-    # session에 conv_type: conversation_id로 되어 있음.
+    # session에 conv_type: conv_id로 되어 있음.
     try: 
         conv_type = conversation_types[chatbot_number] # conv1, conv2, conv3 중 
-        conversation_id = session.get(conv_type)
-        if conversation_id == None:
+        conv_id = request.json.get('conv_id')
+        if conv_id == None:
             cur.execute(""" SELECT id FROM conversations WHERE user_id = %s AND chat_type = %s 
             ORDER BY id DESC LIMIT 1;""", (userid, conv_type))
             result = cur.fetchone()
-            conversation_id = result[0]
+            conv_id = result[0]
 
         cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
-                    (conversation_id, 'bot', response))
+                    (conv_id, 'bot', response))
         message_id = cur.lastrowid  # Get the ID of the newly inserted message
     except:
         return jsonify({'error': 404})
@@ -272,7 +267,7 @@ def bot_response(chatbot_number):
         cur.close()
         conn.commit()
 
-    return jsonify({'response': response, 'message_id': message_id})
+    return jsonify({'response': response, 'message_id': message_id, 'conv_id': conv_id})
 
 
 
@@ -283,9 +278,6 @@ def chat_reload(chatbot_number):
         return jsonify({'error': 'Invalid chatbot number'}), 400
     
     userid = request.json.get('userid')
-
-    conv_type = conversation_types[chatbot_number]
-    session.pop(conv_type, None)
 
     chat_agents[userid][f'chat_agent{chatbot_number}'] = restart_agent(chatbot_number)
 
