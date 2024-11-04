@@ -29,7 +29,27 @@
     
     <!-- Initially hidden iframe -->
     <iframe 
-        id="myIframe" 
+        id="myIframe1" 
+        src="" 
+        width="100%"
+        height="510px"
+        frameborder="0"
+        allowfullscreen
+        scrolling="no"
+        style="display: none;">
+    </iframe>
+    <iframe 
+        id="myIframe2" 
+        src="" 
+        width="100%"
+        height="510px"
+        frameborder="0"
+        allowfullscreen
+        scrolling="no"
+        style="display: none;">
+    </iframe>
+    <iframe 
+        id="myIframe3" 
         src="" 
         width="100%"
         height="510px"
@@ -47,7 +67,35 @@
             // Check if userid is provided
             if (userid) {
                 // Update the iframe src and make it visible
-                const iframe = document.getElementById('myIframe');
+                const iframe = document.getElementById('myIframe1');
+                iframe.src = `http://54.180.163.181:5000/survey/type1?userid=${userid}`;
+                iframe.style.display = "block"; // Show iframe
+            } else {
+                alert("Please enter a UserID.");
+            }
+        });
+        // JavaScript to handle showing the iframe with the updated src
+        document.getElementById('submitButton').addEventListener('click', function() {
+            const userid = document.getElementById('useridInput').value;
+            
+            // Check if userid is provided
+            if (userid) {
+                // Update the iframe src and make it visible
+                const iframe = document.getElementById('myIframe2');
+                iframe.src = `http://54.180.163.181:5000/survey/type2?userid=${userid}`;
+                iframe.style.display = "block"; // Show iframe
+            } else {
+                alert("Please enter a UserID.");
+            }
+        });
+        // JavaScript to handle showing the iframe with the updated src
+        document.getElementById('submitButton').addEventListener('click', function() {
+            const userid = document.getElementById('useridInput').value;
+            
+            // Check if userid is provided
+            if (userid) {
+                // Update the iframe src and make it visible
+                const iframe = document.getElementById('myIframe3');
                 iframe.src = `http://54.180.163.181:5000/survey/type3?userid=${userid}`;
                 iframe.style.display = "block"; // Show iframe
             } else {
