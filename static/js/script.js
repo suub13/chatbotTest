@@ -1,76 +1,69 @@
-function setupEventListeners(chatbotNumber) {
-    document.getElementById(`send-button${chatbotNumber}`).addEventListener('click', () => sendMessage(chatbotNumber));
-    
-    // 'Enter' 버튼을 누르면 버튼 클릭과 동일한 기능 수행
-    document.getElementById(`chat-input${chatbotNumber}`).addEventListener('keydown', (event) => handleKeyDown(event, chatbotNumber));
+function setupEventListeners(typeNum) {
+    // 화면 켜질 때 startLoadingModel() 수행
+    document.addEventListener('DOMContentLoaded', () => startLoadingModel(typeNum));
+
+    // 'Enter' 버튼을 리스너 (버튼 클릭과 동일한 기능 수행)
+    document.getElementById(`chat-input${typeNum}`).addEventListener('keydown', (event) => handleKeyDown(event, typeNum));
+
+    // send-button 버튼 리스너
+    document.getElementById(`send-button${typeNum}`).addEventListener('click', () => sendMessage(typeNum));
     
     // Reload 버튼 리스너
-    document.getElementById(`reload-button${chatbotNumber}`).addEventListener('click', () => reloadChat(chatbotNumber));
-
-    document.addEventListener('DOMContentLoaded', () => startLoadingModel(chatbotNumber));
+    document.getElementById(`reload-button${typeNum}`).addEventListener('click', () => reloadChat(typeNum));
 }
 
-// 처음 로딩 페이지 추가하려면 아래 function 에서 comment 처리 된 부분 해지 해야 함.
+
 function startLoadingModel(typeNum) {
     sessionStorage.clear();
-    toggleInput(typeNum, false); 
+    toggleInput(typeNum, false);
     document.getElementById('loading-overlay').style.display = 'block';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userid = urlParams.get('userid'); 
+    const userid = new URLSearchParams(window.location.search).get('userid'); 
+    sessionStorage.setItem('userid', userid);
 
-    sessionStorage.setItem('userid',userid); 
+    sessionStorage.setItem('shouldStoreBotMessage', true);
 
     fetch('/create_agent', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ userid, typeNum }) // Include both userid and typeNum in the request body
+        body: JSON.stringify({ userid, typeNum })
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            alert(data.error);
-        } else {
-            console.log(data.message);
-            // Enable chat input once the agent is ready
-            toggleInput(typeNum, true);
-            document.getElementById('loading-overlay').style.display = 'none';
-        }
-    })
-    .catch(error => {
-        console.error('Error creating chat agent:', error);
-        document.getElementById('loading-overlay').style.display = 'none';
-    });
+    .then(data => data.error ? alert(data.error) : toggleInput(typeNum, true))
+    .catch(console.error)
+    .finally(() => document.getElementById('loading-overlay').style.display = 'none');
 }
 
 
-function handleKeyDown(event, chatbotNumber) {
+function handleKeyDown(event, typeNum) {
     if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault(); // Prevent new line
-        sendMessage(chatbotNumber);
-    }
-}
-
-function sendMessage(chatbotNumber) {
-    userid = sessionStorage.getItem('userid');
-
-    const inputField = document.getElementById(`chat-input${chatbotNumber}`);
-    const message = inputField.value.trim();
-    if (message !== '') {
-        displayMessage(chatbotNumber, 'user', message);
-        userMessageDB(userid, chatbotNumber, message);
-        inputField.value = ''; // inputField 리셋
-        toggleInput(chatbotNumber, false); // 입력 필드 비활성화
-        getChatbotResponse(userid, chatbotNumber, message); // 챗봇 응답 요청
+        event.preventDefault();
+        sendMessage(typeNum);
     }
 }
 
 
-function displayMessage(chatbotNumber, sender, message, messageId = null) {
-    const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
+// function sendMessage(typeNum) {
+//     const userid = sessionStorage.getItem('userid');
+//     const inputField = document.getElementById(`chat-input${typeNum}`);
+//     const message = inputField.value.trim();
+
+//     if (message) {
+//         displayMessage(typeNum, 'user', message); // display user message
+//         storeUserMessage(userid, typeNum, message); // store user message in DB
+//         inputField.value = ''; // empty input box
+//         toggleInput(typeNum, false); // disable input-box & send-button
+//         getChatbotResponse(userid, typeNum, message);
+//         storeBotMessage(userid, typeNum, )
+
+//         toggleInput(typeNum, true); // enable input-box & send-button
+//     }
+// }
+
+
+function displayMessage(typeNum, sender, message, messageId = null) {
+    const messagesContainer = document.getElementById(`messages${typeNum}`);
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}`;
 
@@ -94,21 +87,17 @@ function displayMessage(chatbotNumber, sender, message, messageId = null) {
 }
 
 
-async function userMessageDB(userid, chatbotNumber, userMessage) {
-    let conv_id = sessionStorage.getItem(`convType${chatbotNumber}`);
+async function storeUserMessage(userid, typeNum, userMessage) {
+    let conv_id = sessionStorage.getItem(`convType${typeNum}`);
 
     try {
-        const response = await fetch(`/api/userMessage${chatbotNumber}`, {
+        const response = await fetch(`/api/userMessage${typeNum}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             credentials: 'include',
-            body: JSON.stringify({ 
-                message: userMessage,
-                userid: userid,
-                conv_id: conv_id
-            }),
+            body: JSON.stringify({ userMessage, userid, conv_id }),
         });
 
         if (!response.ok) {
@@ -120,7 +109,7 @@ async function userMessageDB(userid, chatbotNumber, userMessage) {
         conv_id = data.conv_id;
 
         // Save conv_id to sessionStorage
-        sessionStorage.setItem(`convType${chatbotNumber}`, conv_id);
+        sessionStorage.setItem(`convType${typeNum}`, conv_id);
 
     } catch (error) {
         console.error('Error fetching Python function result:', error);
@@ -128,59 +117,179 @@ async function userMessageDB(userid, chatbotNumber, userMessage) {
 }
 
 
-function getChatbotResponse(userid, chatbotNumber, userMessage) {
-    let conv_id = sessionStorage.getItem(`convType${chatbotNumber}`);
+// function getChatbotResponse(userid, typeNum, userMessage) {
+//     let conv_id = sessionStorage.getItem(`convType${typeNum}`);
 
-    fetch(`/api/botResponse${chatbotNumber}`, {
+//     fetch(`/api/botResponse${typeNum}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         credentials: 'include',
+//         body: JSON.stringify({ userMessage, userid, conv_id }),
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         displayMessage(typeNum, 'bot', data.response, data.message_id);
+//         sessionStorage.setItem(`convType${typeNum}`, data.conv_id);
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//     });
+// }
+
+function sendMessage(typeNum) {
+    const userid = sessionStorage.getItem('userid');
+    const inputField = document.getElementById(`chat-input${typeNum}`);
+    const message = inputField.value.trim();
+
+    if (message) {
+        displayMessage(typeNum, 'user', message);
+        storeUserMessage(userid, typeNum, message);
+        inputField.value = '';
+        toggleInput(typeNum, false);
+
+        // Generate a unique request ID and store it in sessionStorage
+        const requestId = Date.now();  // Use timestamp as unique ID
+        sessionStorage.setItem(`requestId${typeNum}`, requestId);
+        sessionStorage.setItem('shouldStoreBotMessage', 'true');
+
+        getChatbotResponse(userid, typeNum, message, requestId)
+            .then(botResponse => {
+                const shouldStoreBotMessage = sessionStorage.getItem('shouldStoreBotMessage') === 'true';
+                const latestRequestId = sessionStorage.getItem(`requestId${typeNum}`);
+
+                // Only process this response if the request ID matches and shouldStoreBotMessage is true
+                if (shouldStoreBotMessage && latestRequestId == requestId) {
+                    console.log("왜들어와");
+                    displayMessage(typeNum, 'bot', botResponse.response);
+                    storeBotMessage(userid, typeNum, botResponse.response, botResponse.conv_id);
+                }
+            })
+            .finally(() => toggleInput(typeNum, true));
+    }
+}
+
+async function getChatbotResponse(userid, typeNum, userMessage, requestId) {
+    let conv_id = sessionStorage.getItem(`convType${typeNum}`);
+    console.log(conv_id);
+
+    return fetch(`/api/botResponse${typeNum}`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ 
-            message: userMessage,
-            userid: userid,
-            conv_id: conv_id,
-         }),
+        body: JSON.stringify({ userMessage, userid, conv_id, requestId }),
     })
-    .then(response => {
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        const botResponse = data.response;
-        const messageId = data.message_id;
-        console.log('Result:', botResponse); // 결과 출력
-        displayMessage(chatbotNumber, 'bot', botResponse, messageId); // 봇 응답 출력
-        toggleInput(chatbotNumber, true); // 입력 필드 활성화
-
-        conv_id = data.conv_id;
-        sessionStorage.setItem(`convType${chatbotNumber}`, conv_id);
+        sessionStorage.setItem(`convType${typeNum}`, data.conv_id);
+        console.log(data.conv_id);
+        return data;
     })
     .catch(error => {
         console.error('Error:', error);
     });
 }
 
-async function reloadChat(chatbotNumber) {
+async function reloadChat(typeNum) {
+    sessionStorage.setItem('shouldStoreBotMessage', 'false');
+    
+    // Generate a new unique request ID to cancel any pending responses
+    const newRequestId = Date.now();
+    sessionStorage.setItem(`requestId${typeNum}`, newRequestId);
+
     userid = sessionStorage.getItem('userid');
-    console.log(`Reload button clicked for chatbot ${chatbotNumber}. Messages are being reloaded.`);
+    console.log(`Reload button clicked for chatbot ${typeNum}. Messages are being reloaded.`);
     document.getElementById('loading-overlay').style.display = 'block';
 
-    // 메시지 영역 리셋
-    const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
-    
-    toggleInput(chatbotNumber, false);
-    await callReload(userid, chatbotNumber);
+    // Clear message area
+    const messagesContainer = document.getElementById(`messages${typeNum}`);
+    toggleInput(typeNum, false);
+    await callReload(userid, typeNum);
     messagesContainer.innerHTML = '';
-    toggleInput(chatbotNumber, true);
+    toggleInput(typeNum, true);
 
-    sessionStorage.removeItem(`convType${chatbotNumber}`);
+    sessionStorage.removeItem(`convType${typeNum}`);
     document.getElementById('loading-overlay').style.display = 'none';
 }
 
-async function callReload(userid, chatbotNumber) {
+
+// function sendMessage(typeNum) {
+//     const userid = sessionStorage.getItem('userid');
+//     const inputField = document.getElementById(`chat-input${typeNum}`);
+//     const message = inputField.value.trim();
+
+//     if (message) {
+//         displayMessage(typeNum, 'user', message);
+//         storeUserMessage(userid, typeNum, message);
+//         inputField.value = '';
+//         toggleInput(typeNum, false);
+
+//         sessionStorage.setItem('shouldStoreBotMessage',true);
+//         getChatbotResponse(userid, typeNum, message)
+//             .then(botResponse => {
+//                 const shouldStoreBotMessage = sessionStorage.getItem('shouldStoreBotMessage') === 'true';
+//                 console.log(shouldStoreBotMessage);
+//                 if (shouldStoreBotMessage) {
+//                     console.log("왜들어와")
+//                     displayMessage(typeNum, 'bot', botResponse.response);
+//                     storeBotMessage(userid, typeNum, botResponse.response, botResponse.conv_id);
+//                 }
+//             })
+//             .finally(() => toggleInput(typeNum, true));
+//     }
+// }
+
+// async function getChatbotResponse(userid, typeNum, userMessage) {
+//     let conv_id = sessionStorage.getItem(`convType${typeNum}`);
+//     console.log(conv_id);
+
+//     return fetch(`/api/botResponse${typeNum}`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         credentials: 'include',
+//         body: JSON.stringify({ userMessage, userid, conv_id }),
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         sessionStorage.setItem(`convType${typeNum}`, data.conv_id);
+//         console.log(data.conv_id);
+//         return data;
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//     });
+// }
+
+function storeBotMessage(userid, typeNum, response, conv_id) {
+    fetch('/api/storeBotMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userid, typeNum, response, conv_id }),
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// async function reloadChat(typeNum) {
+//     sessionStorage.setItem('shouldStoreBotMessage', false);
+
+//     userid = sessionStorage.getItem('userid');
+//     console.log(`Reload button clicked for chatbot ${typeNum}. Messages are being reloaded.`);
+//     document.getElementById('loading-overlay').style.display = 'block';
+
+//     // 메시지 영역 리셋
+//     const messagesContainer = document.getElementById(`messages${typeNum}`);
+    
+//     toggleInput(typeNum, false);
+//     await callReload(userid, typeNum);
+//     messagesContainer.innerHTML = '';
+//     toggleInput(typeNum, true);
+
+//     sessionStorage.removeItem(`convType${typeNum}`);
+//     document.getElementById('loading-overlay').style.display = 'none';
+// }
+
+async function callReload(userid, typeNum) {
     try {
-        const response = await fetch(`/api/chatReload/${chatbotNumber}`, {
+        const response = await fetch(`/api/chatReload/${typeNum}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -199,11 +308,12 @@ async function callReload(userid, chatbotNumber) {
     }
 }
 
-function toggleInput(chatbotNumber, enable) {
-    const sendButton = document.getElementById(`send-button${chatbotNumber}`);
-    sendButton.disabled = !enable; // 버튼 활성화/비활성화
+function toggleInput(typeNum, enable) {
+    // send-button, chat-input 활성화/비활성화
+    const sendButton = document.getElementById(`send-button${typeNum}`);
+    sendButton.disabled = !enable; 
 
-    const inputField = document.getElementById(`chat-input${chatbotNumber}`);
+    const inputField = document.getElementById(`chat-input${typeNum}`);
     inputField.disabled = !enable;
 }
 
@@ -223,8 +333,8 @@ function adjustTextareaHeight(textarea) {
 }
 
 
-function setupTextareaAdjustment(chatbotNumber) {
-    const chatInput = document.getElementById(`chat-input${chatbotNumber}`);
+function setupTextareaAdjustment(typeNum) {
+    const chatInput = document.getElementById(`chat-input${typeNum}`);
     chatInput.addEventListener('input', function() {
         adjustTextareaHeight(chatInput);
     });

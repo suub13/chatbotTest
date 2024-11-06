@@ -95,7 +95,6 @@ class ReActAgentBarrack():
         def recommend_closest_place_online(current_location):
             from geopy.distance import geodesic
             import googlemaps
-            import presets
             maps = googlemaps.Client(key=presets.API_KYES['google_maps_api_key'])
             print('User Location: ', current_location)
 

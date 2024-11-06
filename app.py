@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # MySQL 설정
-app.config['MYSQL_HOST'] = 'mysql_db'
+app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'subyou'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'chatbot'
@@ -158,16 +158,16 @@ conversation_types = {
     3: 'conv3'
 }
 
-@app.route('/api/userMessage<int:chatbot_number>', methods=['POST'])
-def user_message(chatbot_number):    
+@app.route('/api/userMessage<int:typeNum>', methods=['POST'])
+def user_message(typeNum):    
     userid = request.json.get('userid')
-    user_message = request.json.get('message')
+    user_message = request.json.get('userMessage')
 
     # DB연결
     conn = mysql_db.connection
     cur = conn.cursor()
     
-    conv_type = conversation_types[chatbot_number]
+    conv_type = conversation_types[typeNum]
     conv_id = request.json.get('conv_id')
     
     if conv_id is None:
@@ -184,56 +184,100 @@ def user_message(chatbot_number):
 
 
 
-@app.route('/api/botResponse<int:chatbot_number>', methods=['POST'])
-def bot_response(chatbot_number):    
-    userid = request.json.get('userid')
+# @app.route('/api/botResponse<int:typeNum>', methods=['POST'])
+# def bot_response(typeNum):    
+#     userid = request.json.get('userid')
 
+#     if not userid:
+#         return jsonify({'error': 'User ID not found in session'}), 400
+    
+#     # 사용자 message 가져오기
+#     user_message = request.json.get('userMessage')
+
+#     # agent 가져오기
+#     chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
+    
+#     response = chat_agent.invoke_agent(user_message)
+
+#     # DB연결
+#     conn = mysql_db.connection
+#     cur = conn.cursor()
+    
+#     try: 
+#         conv_type = conversation_types[typeNum] # conv1, conv2, conv3 중 
+#         conv_id = request.json.get('conv_id')
+#         if conv_id == None:
+#             cur.execute(""" SELECT id FROM conversations WHERE user_id = %s AND chat_type = %s 
+#             ORDER BY id DESC LIMIT 1;""", (userid, conv_type))
+#             result = cur.fetchone()
+#             conv_id = result[0]
+
+#         cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
+#                     (conv_id, 'bot', response))
+#         message_id = cur.lastrowid  # Get the ID of the newly inserted message
+#     except:
+#         return jsonify({'error': 404})
+#     finally:
+#         cur.close()
+#         conn.commit()
+
+#     return jsonify({'response': response, 'message_id': message_id, 'conv_id': conv_id})
+
+
+@app.route('/api/botResponse<int:typeNum>', methods=['POST'])
+def bot_response(typeNum):    
+    userid = request.json.get('userid')
     if not userid:
         return jsonify({'error': 'User ID not found in session'}), 400
     
-    # 사용자 message 가져오기
-    user_message = request.json.get('message')
+    user_message = request.json.get('userMessage')
+    chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
+    response = chat_agent.invoke_agent(user_message)  # Generate the bot's response
 
-    # agent 가져오기
-    chat_agent = chat_agents[userid][f'chat_agent{chatbot_number}']
+    # Return the bot response and conversation ID without storing in DB
+    conv_type = conversation_types[typeNum]
+    conv_id = request.json.get('conv_id')
+    if conv_id is None:
+        conn = mysql_db.connection
+        cur = conn.cursor()
+        cur.execute("""SELECT id FROM conversations WHERE user_id = %s AND chat_type = %s 
+                       ORDER BY id DESC LIMIT 1;""", (userid, conv_type))
+        result = cur.fetchone()
+        conv_id = result[0]
+        cur.close()
+
+    return jsonify({'response': response, 'conv_id': conv_id})
     
-    response = chat_agent.invoke_agent(user_message)
 
-    # DB연결
+@app.route('/api/storeBotMessage', methods=['POST'])
+def store_bot_message():
+    data = request.json
+    conv_id = data.get('conv_id')
+    response = data.get('response')
     conn = mysql_db.connection
     cur = conn.cursor()
     
-    try: 
-        conv_type = conversation_types[chatbot_number] # conv1, conv2, conv3 중 
-        conv_id = request.json.get('conv_id')
-        if conv_id == None:
-            cur.execute(""" SELECT id FROM conversations WHERE user_id = %s AND chat_type = %s 
-            ORDER BY id DESC LIMIT 1;""", (userid, conv_type))
-            result = cur.fetchone()
-            conv_id = result[0]
-
-        cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s,%s, %s)",
+    try:
+        cur.execute("INSERT INTO messages (conversation_id, sender, content) VALUES (%s, %s, %s)",
                     (conv_id, 'bot', response))
-        message_id = cur.lastrowid  # Get the ID of the newly inserted message
+        message_id = cur.lastrowid
+        conn.commit()
+        return jsonify({'message_id': message_id})
     except:
         return jsonify({'error': 404})
     finally:
         cur.close()
-        conn.commit()
-
-    return jsonify({'response': response, 'message_id': message_id, 'conv_id': conv_id})
 
 
+@app.route('/api/chatReload/<int:typeNum>', methods=['POST'])
+def chat_reload(typeNum):
 
-@app.route('/api/chatReload/<int:chatbot_number>', methods=['POST'])
-def chat_reload(chatbot_number):
-
-    if chatbot_number not in [1, 2, 3]:
-        return jsonify({'error': 'Invalid chatbot number'}), 400
+    if typeNum not in [1, 2, 3]:
+        return jsonify({'error': 'Invalid chatbot type'}), 400
     
     userid = request.json.get('userid')
 
-    chat_agents[userid][f'chat_agent{chatbot_number}'] = restart_agent(chatbot_number)
+    chat_agents[userid][f'chat_agent{typeNum}'] = restart_agent(typeNum)
 
     return '', 204
 
