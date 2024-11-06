@@ -241,17 +241,23 @@ header h2 {
 }
 
 .feedback {
+    display: flex;
+    width: 40px;
+    height: 22px;
     padding: 1px 12px;
     color: rgb(30,48,80);
+    justify-content: space-around; /* 아이콘을 양쪽으로 분배 */
+    align-items: center; /* 세로 가운데 정렬 */
+    font-size: 14px;
 }
 
 .feedback i:hover {
-    font-size: 14px;
     font-weight: bold;
 }
 
 i.fa-thumbs-up {
     padding: 2px;
+    margin-right: 2px;
 }
 
 i.fa-thumbs-down {

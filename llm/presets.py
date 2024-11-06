@@ -30,7 +30,8 @@ PRESET_DEFAULT = {
     'memory': False,
     'template': """
     Answer the following questions as best you can.
-    All answers should be in Korean.
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
+
     You have access to the following tools:
     {tools}
 
@@ -45,7 +46,7 @@ PRESET_DEFAULT = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
-    All answers should be in Korean.
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
 
     Question: {input}
@@ -64,8 +65,13 @@ PRESET_A = {
     'memory': False,
     'template': """
     Answer the following questions as best you can.
-    You must answer in a narrative, one-line format.
-    All answers should be in Korean.
+
+    You are a counselor regarding a lost passport and you need to answer simply and clearly.
+    You must only answer the question and not provide any additional information.
+    Answer the question by inferring whether the questioner is domestic or international.
+    If your location is in-country, you shouldn't mention a consulate or embassy.
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
+
     You have access to the following tools:
     {tools}
 
@@ -80,7 +86,7 @@ PRESET_A = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
-    All answers should be in Korean.
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
 
     Question: {input}
@@ -98,8 +104,11 @@ PRESET_B = {
     'memory': True,
     'template': """
     Answer the following questions as best you can.
-    You must also provide a link to the supporting legislation.
-    All answers should be in Korean.
+
+    You are a counselor regarding a lost passport.
+    You need to answer as much information as possible in a long-winded manner.
+    If your location is in-country, you shouldn't mention a consulate or embassy.
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
     
     You have access to the following tools:
     {tools}
@@ -118,7 +127,7 @@ PRESET_B = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
-    All answers should be in Korean.
+    All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
     
     Question: {input}
@@ -131,15 +140,19 @@ PRESET_C = {
     'preset_name': 'PRESET_C',
     'model_id': 'gpt-4o',
     'openai_api_key': os.getenv('openai_api_key_c'),
-    'max_iterations': 8,
-    'max_execution_time': 20,
+    'max_iterations': 5,
+    'max_execution_time': 10,
     'memory': True,
     'template': """
     Answer the following questions as best you can.
-    You must answer in one narrative sentence.
-    Additionally, you must ask one or two questions to check if there is any missing information or considerations.
-    You need to understand the situation the human is in from previous conversations if there are previous conversations.
+
+    You are a counselor regarding a lost passport and you need to answer simply and clearly.
+    Infer the information you think the questioner might want or need, and be sure to ask for it at the end of your answer.
+
+    Answer the question by inferring whether the questioner is domestic or international.
+    If your location is in-country, you shouldn't mention a consulate or embassy.
     All answers should be in Korean. but, if the address is in English, it will answer in English.
+
     You have access to the following tools:
     {tools}
 
@@ -157,6 +170,7 @@ PRESET_C = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
+    If your location is in-country, you shouldn't mention a consulate or embassy.
     All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
 
@@ -187,7 +201,7 @@ TOOL_PRESET_JUNKYARD = {
 TOOL_PRESET_DIPLOMATIC = {
     'preset_name': 'TOOL_PRESET_DIPLOMATIC',
     'tool_preset_name': 'find_closet_diplomatic-tool',
-    'description': '현재 위치에서 가장 가까운 영사관 또는 대사관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "가마쿠라시에서 가장 가까운 곳."의 경우 recommend_closest_place("가마쿠라시")',
+    'description': '국내(한국) 이외의 곳에 있을 경우, 현재 위치에서 가장 가까운 영사관 또는 대사관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "가마쿠라시에서 가장 가까운 곳."의 경우 recommend_closest_place("가마쿠라시")',
     'target_places': parse_file_to_dict('./assets/diplomatic_coordinatesasd.txt'),
     'TOP': 3,
 }
