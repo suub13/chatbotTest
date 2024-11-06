@@ -217,93 +217,71 @@ header h2 {
 
 .message {
     display: inline-block;
-    margin-bottom: 10px;
     padding: 8px 12px;
     border-radius: 15px;
     word-wrap: break-word;
     max-width: 80%;
     clear: both;
+    color: black;
+    font-size: 13px;
+    text-align: left;
+    word-wrap: break-word;
 }
 
 .user {
     align-self: flex-end;
     background-color: #C9D2FF;
-    text-align: left;
-    color: black;
-    font-size: 13px;
+    margin-bottom: 10px;
 }
 
 .bot {
+    position: relative;
     align-self: flex-start;
     background-color: #e2e3e5;
-    text-align: left;
-    color: black;
-    font-size: 13px;
 }
 
 
-.message.bot {
-    position: relative;  /* Enables absolute positioning for feedback */
-    padding: 10px 8px 10px 10px;       /* Adds padding around the message */
-    margin-bottom: 20px; /* Adds space between messages */
-    background-color: #e2e3e5;
-    border-radius: 10px;
-    max-width: 80%;
-    align-self: flex-start;
-    word-wrap: break-word;
-    clear: both;
-}
 
-.feedback-buttons {
-    position: absolute;
-    top: 8px;            /* Position at the top of the message */
-    right: 5px;          /* Position to the right edge */
-    display: flex;       /* Align the buttons next to each other*/
-    gap: 1px;            /* Adds space between the buttons */
-}
-
-.feedback-buttons i {
-    background: none;
-    border: none;
-    font-size: 12px;
-    cursor: pointer;
-    /* margin-left: 3px; */
-    color: #555;
-    width: 16px;
-    height: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.feedback i{
+    padding: 1px 12px;
+    color: rgb(30,48,80);
 }
 
 
-.feedback-buttons i:hover {
-    color: #333;
+
+.feedback i:hover {
+    font-weight: bold;
 }
 
 /* Style when the user has selected a feedback option */
-.feedback-buttons i.selected {
-    font-weight: bold;
-    color: white;
-    border-radius: 12px;
-    background-color: #333
-}
+/* .feedback i.selected { */
+    /* font-weight: bold; */
+    /* color: white; */
+    /* border-radius: 12px; */
+    /* background-color: #333 */
+/* } */
 
 i.fa-thumbs-up {
+    color: rgb(152, 152, 255);
     padding: 2px;
 }
 
+i.fa-thumbs-up.selected {
+    font-size: 15px;
+}
+
 i.fa-thumbs-down {
-    padding: 2.5px 2px 1.5px 2px;
+    color: rgb(255, 152, 152);
+    padding: 3px 2px 1px 2px;
+}
+
+i.fa-thumbs-down.selected {
+    font-size: 15px;
 }
 
 /* Disable button */
 i.disabled {
     pointer-events: none;
-}
-
-.message-content {
-    margin-right: 42px;  /* Adds space to the right to accommodate feedback buttons */
 }
 
 #loading-overlay {

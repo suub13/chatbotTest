@@ -287,6 +287,10 @@ def remove_feedback():
     return jsonify({'message': 'Feedback removed successfully'}), 200
 
 
+@app.route("/health")
+def health_check():
+    return jsonify({"status": "ok"}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
 

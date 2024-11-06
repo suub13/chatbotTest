@@ -73,23 +73,24 @@ function displayMessage(chatbotNumber, sender, message, messageId = null) {
     const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}`;
+    messageElement.innerHTML = message.replace(/\n/g, '<br>');
+    messagesContainer.appendChild(messageElement);
 
     if (sender === 'bot') {
+        console.log("bot맞아?");
         // Add thumbs up/down buttons with a data attribute for message ID
-        messageElement.innerHTML = `
-                <div class="message-content">
-                    ${message.replace(/\n/g, '<br>')}
-                </div>
-                <div class="feedback-buttons" data-message-id="${messageId}">
-                    <i class="fa-solid fa-thumbs-up"></i>
-                    <i class="fa-solid fa-thumbs-down"></i>
+        const feedbackElement = document.createElement('div');
+        feedbackElement.innerHTML = `
+                <div class="message feedback" data-message-id="${messageId}">
+                    <i class="fa-regular fa-thumbs-up"></i>
+                    <i class="fa-regular fa-thumbs-down"></i>
                 </div>
         `;
-    } else {
-        messageElement.innerHTML = message.replace(/\n/g, '<br>');
-    }
+        console.log(feedbackElement);
+        messagesContainer.appendChild(feedbackElement);
+        console.log(messagesContainer);
+    } 
 
-    messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
 }
 
@@ -239,8 +240,8 @@ document.addEventListener('click', function(event) {
 
     if (target.classList.contains('fa-thumbs-up') || target.classList.contains('fa-thumbs-down')) {
         const feedback = target.classList.contains('fa-thumbs-up') ? 'up' : 'down';
-        const messageId = target.closest('.feedback-buttons').getAttribute('data-message-id');
-        const feedbackContainer = target.closest('.feedback-buttons');
+        const messageId = target.closest('.feedback').getAttribute('data-message-id');
+        const feedbackContainer = target.closest('.feedback');
         const isSelected = target.classList.contains('selected');
 
         if (messageId) {
