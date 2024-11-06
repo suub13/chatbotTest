@@ -240,43 +240,26 @@ header h2 {
     background-color: #e2e3e5;
 }
 
-
-
-.feedback i{
+.feedback {
     padding: 1px 12px;
     color: rgb(30,48,80);
 }
 
-
-
 .feedback i:hover {
+    font-size: 14px;
     font-weight: bold;
 }
 
-/* Style when the user has selected a feedback option */
-/* .feedback i.selected { */
-    /* font-weight: bold; */
-    /* color: white; */
-    /* border-radius: 12px; */
-    /* background-color: #333 */
-/* } */
-
 i.fa-thumbs-up {
-    color: rgb(152, 152, 255);
     padding: 2px;
 }
 
-i.fa-thumbs-up.selected {
-    font-size: 15px;
-}
-
 i.fa-thumbs-down {
-    color: rgb(255, 152, 152);
     padding: 3px 2px 1px 2px;
 }
 
-i.fa-thumbs-down.selected {
-    font-size: 15px;
+i.fa-thumbs-up.selected, i.fa-thumbs-down.selected {
+    font-weight: bold;
 }
 
 /* Disable button */
