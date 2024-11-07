@@ -192,6 +192,7 @@ async function reloadChat(typeNum) {
 
     sessionStorage.removeItem(`convType${typeNum}`);
     document.getElementById('loading-overlay').style.display = 'none';
+    displayMessage(typeNum, 'start bot', "저는 여권 분실 관련 상담 도우미입니다. &#128512; \n현재 위치하신 곳 또는 처한 상황에 대해 구체적으로 말씀해 주시면 더욱더 정확한 도움을 드릴 수 있습니다.");
 }
 
 async function callReload(userid, typeNum) {
