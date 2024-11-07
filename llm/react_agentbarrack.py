@@ -100,7 +100,7 @@ class ReActAgentBarrack():
 
             geo_results = maps.geocode(current_location)
             retry_count = 0
-            while not geo_results and retry_count < 3:
+            while not geo_results and retry_count < 1:
                 time.sleep(1)
                 geo_results = maps.geocode(current_location)
                 retry_count += 1
@@ -181,6 +181,7 @@ class ReActAgentBarrack():
             description=description,
             )
         self.tools.append(retriever_tool)
+        self.result = ''
 
     def make_agent(
             self,
@@ -233,14 +234,8 @@ class ReActAgentBarrack():
             return_intermediate_steps=True,
             verbose=self.verbose, 
             )
-
-    def invoke_agent(self, input):
-        # 질문input의 내용을 삭제
-        def remove_question_lines(text):
-            lines = text.splitlines()
-            filtered_lines = [line for line in lines if not line.startswith('Question: ')]
-            return '\n'.join(filtered_lines)
-
+        
+    def invoke_agent(self, input, MAX_REPETITIONS=2):
         # 특정 단어들이 문장 안에 있을 경우 그 문장을 삭제
         def remove_error_sentences(text, n=3):
             keywords = ['죄송', 'sorry', 'format', '포맷', '오류', 'error']
@@ -273,19 +268,16 @@ class ReActAgentBarrack():
         
         # 모든 문장들이 영어일 경우 True를 리턴
         def is_all_english(text):
-            sentences = text.split('. ')
-            for sentence in sentences:
-                if not re.match(r'^[a-zA-Z\s.,?!\'\"-]*$', sentence):
+            lines = text.splitlines()
+            for line in lines:
+                if not re.fullmatch(r'^[a-zA-Z0-9\s.,?!\'\"()-]*$', line):
                     return False
             return True
 
         self.input = input
         repetition_count = 0
-        while True:
+        while repetition_count < (MAX_REPETITIONS + 1):
             start_time = time.time()
-            print('repetition_count: ', repetition_count,
-                  '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)))
-            
             result = self.executor.invoke({"input": self.input})
             self.result = result
 
@@ -297,6 +289,8 @@ class ReActAgentBarrack():
                     log = step[0].log
                     if ('Action Input: ' in log) or ('Question: ' in log) or is_all_english(log):
                         continue
+                    log = remove_all_english_sentences(log)
+                    log = remove_error_sentences(log)
                     log_list.append(log)
                     log_len.append(len(log))
                 
@@ -308,19 +302,21 @@ class ReActAgentBarrack():
             else:
                 output = result.get('output')
 
-            if not output or is_all_english(output):
-                print('Repeat again because all sentences are in English.')
+            if not output.replace(' ', '').replace('\n', '') or is_all_english(output):
                 end_time = time.time()
-                print('repetition_count: ', repetition_count,
-                    '\tStart time: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)),
-                    '\tElapsed time: {:.2f}'.format(end_time - start_time))
+                print(
+                    f'repetition_count: {repetition_count} / {MAX_REPETITIONS}',
+                    '\tElapsed time: {:.2f}'.format(end_time - start_time)
+                    )
                 repetition_count += 1
+                print('Repeat again because all sentences are NULL or English.')
             else:
+                end_time = time.time()
+                print(
+                    f'repetition_count: {repetition_count} / {MAX_REPETITIONS}',
+                    '\tElapsed time: {:.2f}'.format(end_time - start_time)
+                    )
                 break
-        
-        output = remove_error_sentences(output)
-        output = remove_all_english_sentences(output)
-        output = remove_question_lines(output)
 
         self.output = output.replace('Thought: ', '').replace('; ', '. ')
 
@@ -344,4 +340,4 @@ class ReActAgentBarrack():
 
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')
-    print('2024.11.04.10:20')
+    print('2024.11.07.16:00')

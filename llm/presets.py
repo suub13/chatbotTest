@@ -61,8 +61,8 @@ PRESET_A = {
     'model_id': 'gpt-4o',
     'openai_api_key': os.getenv('openai_api_key_a'),
     'max_iterations': 8,
-    'max_execution_time': 15,
-    'memory': False,
+    'max_execution_time': 10,
+    'memory': True,
     'template': """
     Answer the following questions as best you can.
 
@@ -100,7 +100,7 @@ PRESET_B = {
     'model_id': 'gpt-4o',
     'openai_api_key': os.getenv('openai_api_key_b'),
     'max_iterations': 8,
-    'max_execution_time': 15,
+    'max_execution_time': 10,
     'memory': True,
     'template': """
     Answer the following questions as best you can.
@@ -140,13 +140,13 @@ PRESET_C = {
     'preset_name': 'PRESET_C',
     'model_id': 'gpt-4o',
     'openai_api_key': os.getenv('openai_api_key_c'),
-    'max_iterations': 5,
-    'max_execution_time': 10,
+    'max_iterations': 8,
+    'max_execution_time': 12,
     'memory': True,
     'template': """
     Answer the following questions as best you can.
 
-    You are a counselor regarding a lost passport and you need to answer simply and clearly.
+    You are an active agent for lost passports and your answers should be simple and clear.
     Infer the information you think the questioner might want or need, and be sure to ask for it at the end of your answer.
 
     Answer the question by inferring whether the questioner is domestic or international.

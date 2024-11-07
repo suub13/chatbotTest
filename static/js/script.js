@@ -1,13 +1,13 @@
-function setupEventListeners(chatbotNumber) {
-    document.getElementById(`send-button${chatbotNumber}`).addEventListener('click', () => sendMessage(chatbotNumber));
+function setupEventListeners(typeNum) {
+    document.getElementById(`send-button${typeNum}`).addEventListener('click', () => sendMessage(typeNum));
     
     // 'Enter' 버튼을 누르면 버튼 클릭과 동일한 기능 수행
-    document.getElementById(`chat-input${chatbotNumber}`).addEventListener('keydown', (event) => handleKeyDown(event, chatbotNumber));
+    document.getElementById(`chat-input${typeNum}`).addEventListener('keydown', (event) => handleKeyDown(event, typeNum));
     
     // Reload 버튼 리스너
-    document.getElementById(`reload-button${chatbotNumber}`).addEventListener('click', () => reloadChat(chatbotNumber));
+    document.getElementById(`reload-button${typeNum}`).addEventListener('click', () => reloadChat(typeNum));
 
-    document.addEventListener('DOMContentLoaded', () => startLoadingModel(chatbotNumber));
+    document.addEventListener('DOMContentLoaded', () => startLoadingModel(typeNum));
 }
 
 // 처음 로딩 페이지 추가하려면 아래 function 에서 comment 처리 된 부분 해지 해야 함.
@@ -38,6 +38,7 @@ function startLoadingModel(typeNum) {
             // Enable chat input once the agent is ready
             toggleInput(typeNum, true);
             document.getElementById('loading-overlay').style.display = 'none';
+            displayMessage(typeNum, 'start bot', "저는 여권 분실 관련 상담 도우미입니다. &#128512; \n현재 위치하신 곳 또는 처한 상황에 대해 구체적으로 말씀해 주시면 더욱더 정확한 도움을 드릴 수 있습니다.");
         }
     })
     .catch(error => {
@@ -47,59 +48,61 @@ function startLoadingModel(typeNum) {
 }
 
 
-function handleKeyDown(event, chatbotNumber) {
+function handleKeyDown(event, typeNum) {
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault(); // Prevent new line
-        sendMessage(chatbotNumber);
+        sendMessage(typeNum);
     }
 }
 
-function sendMessage(chatbotNumber) {
+function sendMessage(typeNum) {
     userid = sessionStorage.getItem('userid');
 
-    const inputField = document.getElementById(`chat-input${chatbotNumber}`);
+    const inputField = document.getElementById(`chat-input${typeNum}`);
     const message = inputField.value.trim();
     if (message !== '') {
-        displayMessage(chatbotNumber, 'user', message);
-        userMessageDB(userid, chatbotNumber, message);
+        displayMessage(typeNum, 'user', message);
+        userMessageDB(userid, typeNum, message);
         inputField.value = ''; // inputField 리셋
-        toggleInput(chatbotNumber, false); // 입력 필드 비활성화
-        getChatbotResponse(userid, chatbotNumber, message); // 챗봇 응답 요청
+        toggleInput(typeNum, false); // 입력 필드 비활성화
+        getChatbotResponse(userid, typeNum, message); // 챗봇 응답 요청
     }
 }
 
 
-function displayMessage(chatbotNumber, sender, message, messageId = null) {
-    const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
+function displayMessage(typeNum, sender, message, messageId = null, isTyping = false) {
+    const messagesContainer = document.getElementById(`messages${typeNum}`);
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}`;
-    messageElement.innerHTML = message.replace(/\n/g, '<br>');
-    messagesContainer.appendChild(messageElement);
 
-    if (sender === 'bot') {
-        console.log("bot맞아?");
-        // Add thumbs up/down buttons with a data attribute for message ID
+    if (isTyping) {
+        messageElement.innerHTML = `<span class="typing-dots">&middot &middot &middot</span>`;
+        messageElement.dataset.messageId = messageId;  // 데이터 ID 설정
+        messagesContainer.appendChild(messageElement);
+    } else if (sender === 'feedback'){
         const feedbackElement = document.createElement('div');
+        feedbackElement.classList.add('message', 'feedback');
+        feedbackElement.dataset.messageId = messageId; // data-message-id 추가
         feedbackElement.innerHTML = `
-                <div class="message feedback" data-message-id="${messageId}">
-                    <i class="fa-regular fa-thumbs-up"></i>
-                    <i class="fa-regular fa-thumbs-down"></i>
-                </div>
+            <i class="fa-regular fa-thumbs-up"></i>
+            <i class="fa-regular fa-thumbs-down"></i>
         `;
-        console.log(feedbackElement);
         messagesContainer.appendChild(feedbackElement);
-        console.log(messagesContainer);
-    } 
+    }
+    else  {
+        messageElement.innerHTML = message.replace(/\n/g, '<br>');
+        messagesContainer.appendChild(messageElement);
+    }    
 
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
 }
 
 
-async function userMessageDB(userid, chatbotNumber, userMessage) {
-    let conv_id = sessionStorage.getItem(`convType${chatbotNumber}`);
+async function userMessageDB(userid, typeNum, userMessage) {
+    let conv_id = sessionStorage.getItem(`convType${typeNum}`);
 
     try {
-        const response = await fetch(`/api/userMessage${chatbotNumber}`, {
+        const response = await fetch(`/api/userMessage${typeNum}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -121,7 +124,7 @@ async function userMessageDB(userid, chatbotNumber, userMessage) {
         conv_id = data.conv_id;
 
         // Save conv_id to sessionStorage
-        sessionStorage.setItem(`convType${chatbotNumber}`, conv_id);
+        sessionStorage.setItem(`convType${typeNum}`, conv_id);
 
     } catch (error) {
         console.error('Error fetching Python function result:', error);
@@ -129,10 +132,14 @@ async function userMessageDB(userid, chatbotNumber, userMessage) {
 }
 
 
-function getChatbotResponse(userid, chatbotNumber, userMessage) {
-    let conv_id = sessionStorage.getItem(`convType${chatbotNumber}`);
+function getChatbotResponse(userid, typeNum, userMessage) {
+    let conv_id = sessionStorage.getItem(`convType${typeNum}`);
 
-    fetch(`/api/botResponse${chatbotNumber}`, {
+    // 1. 로딩 메시지 ('...') 표시
+    const loadingMessageId = `loading-${Date.now()}`;  // 고유 메시지 ID 생성
+    displayMessage(typeNum, 'bot', '', loadingMessageId, true);  // 로딩 메시지 추가
+
+    fetch(`/api/botResponse${typeNum}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -150,38 +157,46 @@ function getChatbotResponse(userid, chatbotNumber, userMessage) {
     .then(data => {
         const botResponse = data.response;
         const messageId = data.message_id;
-        console.log('Result:', botResponse); // 결과 출력
-        displayMessage(chatbotNumber, 'bot', botResponse, messageId); // 봇 응답 출력
-        toggleInput(chatbotNumber, true); // 입력 필드 활성화
+
+        // 3. 로딩 메시지 교체 (data-message-id를 새 메시지 ID로 업데이트)
+        const loadingMessageElement = document.querySelector(`#messages${typeNum} .message.bot[data-message-id="${loadingMessageId}"]`);
+        if (loadingMessageElement) {
+            // data-message-id 값을 새 메시지 ID로 변경
+            loadingMessageElement.setAttribute('data-message-id', messageId);
+            loadingMessageElement.innerHTML = botResponse.replace(/\n/g, '<br>'); // 텍스트 교체
+            displayMessage(typeNum, "feedback", '', messageId, false);
+        }
+
+        toggleInput(typeNum, true); // 입력 필드 활성화
 
         conv_id = data.conv_id;
-        sessionStorage.setItem(`convType${chatbotNumber}`, conv_id);
+        sessionStorage.setItem(`convType${typeNum}`, conv_id);
     })
     .catch(error => {
         console.error('Error:', error);
     });
 }
 
-async function reloadChat(chatbotNumber) {
+async function reloadChat(typeNum) {
     userid = sessionStorage.getItem('userid');
-    console.log(`Reload button clicked for chatbot ${chatbotNumber}. Messages are being reloaded.`);
+    console.log(`Reload button clicked for chatbot ${typeNum}. Messages are being reloaded.`);
     document.getElementById('loading-overlay').style.display = 'block';
 
     // 메시지 영역 리셋
-    const messagesContainer = document.getElementById(`messages${chatbotNumber}`);
+    const messagesContainer = document.getElementById(`messages${typeNum}`);
     
-    toggleInput(chatbotNumber, false);
-    await callReload(userid, chatbotNumber);
+    toggleInput(typeNum, false);
+    await callReload(userid, typeNum);
     messagesContainer.innerHTML = '';
-    toggleInput(chatbotNumber, true);
+    toggleInput(typeNum, true);
 
-    sessionStorage.removeItem(`convType${chatbotNumber}`);
+    sessionStorage.removeItem(`convType${typeNum}`);
     document.getElementById('loading-overlay').style.display = 'none';
 }
 
-async function callReload(userid, chatbotNumber) {
+async function callReload(userid, typeNum) {
     try {
-        const response = await fetch(`/api/chatReload/${chatbotNumber}`, {
+        const response = await fetch(`/api/chatReload/${typeNum}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -200,11 +215,11 @@ async function callReload(userid, chatbotNumber) {
     }
 }
 
-function toggleInput(chatbotNumber, enable) {
-    const sendButton = document.getElementById(`send-button${chatbotNumber}`);
+function toggleInput(typeNum, enable) {
+    const sendButton = document.getElementById(`send-button${typeNum}`);
     sendButton.disabled = !enable; // 버튼 활성화/비활성화
 
-    const inputField = document.getElementById(`chat-input${chatbotNumber}`);
+    const inputField = document.getElementById(`chat-input${typeNum}`);
     inputField.disabled = !enable;
 }
 
@@ -224,8 +239,8 @@ function adjustTextareaHeight(textarea) {
 }
 
 
-function setupTextareaAdjustment(chatbotNumber) {
-    const chatInput = document.getElementById(`chat-input${chatbotNumber}`);
+function setupTextareaAdjustment(typeNum) {
+    const chatInput = document.getElementById(`chat-input${typeNum}`);
     chatInput.addEventListener('input', function() {
         adjustTextareaHeight(chatInput);
     });

@@ -158,8 +158,8 @@ conversation_types = {
     3: 'conv3'
 }
 
-@app.route('/api/userMessage<int:chatbot_number>', methods=['POST'])
-def user_message(chatbot_number):    
+@app.route('/api/userMessage<int:typeNum>', methods=['POST'])
+def user_message(typeNum):    
     userid = request.json.get('userid')
     user_message = request.json.get('message')
 
@@ -167,7 +167,7 @@ def user_message(chatbot_number):
     conn = mysql_db.connection
     cur = conn.cursor()
     
-    conv_type = conversation_types[chatbot_number]
+    conv_type = conversation_types[typeNum]
     conv_id = request.json.get('conv_id')
     
     if conv_id is None:
@@ -184,8 +184,8 @@ def user_message(chatbot_number):
 
 
 
-@app.route('/api/botResponse<int:chatbot_number>', methods=['POST'])
-def bot_response(chatbot_number):    
+@app.route('/api/botResponse<int:typeNum>', methods=['POST'])
+def bot_response(typeNum):    
     userid = request.json.get('userid')
 
     if not userid:
@@ -195,8 +195,7 @@ def bot_response(chatbot_number):
     user_message = request.json.get('message')
 
     # agent 가져오기
-    chat_agent = chat_agents[userid][f'chat_agent{chatbot_number}']
-    
+    chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
     response = chat_agent.invoke_agent(user_message)
 
     # DB연결
@@ -204,7 +203,7 @@ def bot_response(chatbot_number):
     cur = conn.cursor()
     
     try: 
-        conv_type = conversation_types[chatbot_number] # conv1, conv2, conv3 중 
+        conv_type = conversation_types[typeNum] # conv1, conv2, conv3 중 
         conv_id = request.json.get('conv_id')
         if conv_id == None:
             cur.execute(""" SELECT id FROM conversations WHERE user_id = %s AND chat_type = %s 
@@ -225,15 +224,15 @@ def bot_response(chatbot_number):
 
 
 
-@app.route('/api/chatReload/<int:chatbot_number>', methods=['POST'])
-def chat_reload(chatbot_number):
+@app.route('/api/chatReload/<int:typeNum>', methods=['POST'])
+def chat_reload(typeNum):
 
-    if chatbot_number not in [1, 2, 3]:
+    if typeNum not in [1, 2, 3]:
         return jsonify({'error': 'Invalid chatbot number'}), 400
     
     userid = request.json.get('userid')
 
-    chat_agents[userid][f'chat_agent{chatbot_number}'] = restart_agent(chatbot_number)
+    chat_agents[userid][f'chat_agent{typeNum}'] = restart_agent(typeNum)
 
     return '', 204
 
