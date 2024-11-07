@@ -32,44 +32,6 @@ header h2 {
     margin: 0;
 }
 
-.auth-buttons {
-    display: flex;
-    gap: 10px;
-    position: absolute;  /* 절대 위치 */
-    right: 50px;  /* 오른쪽 끝으로 이동 */
-    align-items: center;  /* 하단 정렬 */
-}
-
-.auth-buttons p {
-    font-size: 18px;  /* 폰트 크기 설정 */
-    margin: 0;  /* 기본 여백 제거 */
-}
-
-.auth-buttons a,
-.auth-buttons button {
-    background-color: white;
-    color: black;
-    padding: 10px 10px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    border-radius: 2px;
-    width: 90px;
-    font-size: 16px;
-}
-
-/* .auth-buttons .auth-link {
-    /* background-color: #666; */
-    /* color: white; */
-
-/* } */ 
-
-.auth-buttons a:hover,
-.auth-buttons button:hover {
-    background-color: #E5F0FE;
-    color:#333333;
-}
-
 .container {
     display: flex;
     justify-content: center;
@@ -82,35 +44,8 @@ header h2 {
     text-align: center;
 }
 
-#separateBody {
-    width: 100%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: center;
-    padding: 20px 0px;
-}
-
-#main-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#chat-container {
-    min-width: 300px;
-    max-width: 600px;
-    width: 70%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 20px;
-}
-
 #chat-box {
-    min-width: 300px;
+    min-width: 150px;
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -119,7 +54,7 @@ header h2 {
     background-color: white;
     display: flex;
     flex-direction: column;
-    height: 500px;
+    height: 600px;
 }
 
 .messages {
@@ -213,7 +148,6 @@ header h2 {
     border: 2px solid #aeb7bf;
     color: white;
 }
-
 
 .message {
     display: inline-block;
