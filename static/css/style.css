@@ -47,7 +47,7 @@ header h2 {
 #chat-box {
     min-width: 150px;
     width: 100%;
-    /* border: 1px solid #ccc; */
+    border: 1px solid #ccc;
     border-radius: 5px;
     overflow: hidden;
     /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
