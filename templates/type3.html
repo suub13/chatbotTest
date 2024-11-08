@@ -7,16 +7,8 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-        window.addEventListener('beforeunload', function() {
-            resetSessionTimeout = setTimeout(() => {
-                navigator.sendBeacon('/reset_session');
-            }, 1000);  // Adjust the delay as necessary
-        });
-    </script>
-    
 </head>
+
 <body>
     <div id="loading-overlay" style="display: none;">
         <div class="spinner"></div>
