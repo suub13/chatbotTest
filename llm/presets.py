@@ -86,6 +86,7 @@ PRESET_A = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
+    You need to understand the situation the human is in from previous conversations if there are previous conversations.
     All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
 
@@ -127,6 +128,7 @@ PRESET_B = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
+    You need to understand the situation the human is in from previous conversations if there are previous conversations.
     All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
     
@@ -170,6 +172,7 @@ PRESET_C = {
     Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
+    You need to understand the situation the human is in from previous conversations if there are previous conversations.
     If your location is in-country, you shouldn't mention a consulate or embassy.
     All answers should be in Korean. but, if the address is in English, it will answer in English.
     Begin!
