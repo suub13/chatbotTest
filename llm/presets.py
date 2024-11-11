@@ -195,8 +195,8 @@ TOOL_PRESET_JUNKYARD = {
     'preset_name': 'TOOL_PRESET_JUNKYARD',
     'tool_preset_name': 'find_closet_junkyard-tool',
     'description': '현재 위치에서 가장 가까운 폐차장을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "인천 서구에서 가장 가까운 곳."의 경우 recommend_closest_place("인천 서구")',
-    'location_coordinates': parse_file_to_dict('./assets/geographic_coordinatesasd.txt'),
-    'target_places': parse_file_to_dict('./assets/junkyard_coordinatesasd.txt'),
+    'location_coordinates': parse_file_to_dict('./assets/geographic_coordinates.txt'),
+    'target_places': parse_file_to_dict('./assets/junkyard_coordinates.txt'),
     'proofreading': read_list_from_txt('./assets/administrative_district_list.txt'),
     'TOP': 3,
 }
@@ -204,7 +204,15 @@ TOOL_PRESET_JUNKYARD = {
 TOOL_PRESET_DIPLOMATIC = {
     'preset_name': 'TOOL_PRESET_DIPLOMATIC',
     'tool_preset_name': 'find_closet_diplomatic-tool',
-    'description': '국내(한국) 이외의 곳에 있을 경우, 현재 위치에서 가장 가까운 영사관 또는 대사관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "가마쿠라시에서 가장 가까운 곳."의 경우 recommend_closest_place("가마쿠라시")',
-    'target_places': parse_file_to_dict('./assets/diplomatic_coordinatesasd.txt'),
+    'description': '해외에 있을 경우, 현재 위치에서 가장 가까운 영사관 또는 대사관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "가마쿠라시에서 가장 가까운 곳."의 경우 recommend_closest_place("가마쿠라시")',
+    'target_places': parse_file_to_dict('./assets/diplomatic_coordinates.txt'),
+    'TOP': 3,
+}
+
+TOOL_PRESET_AGENCY = {
+    'preset_name': 'TOOL_PRESET_DIPLOMATIC',
+    'tool_preset_name': 'find_closet_diplomatic-tool',
+    'description': '국내(한국)에 있을 경우, 현재 위치에서 가장 가까운 여권사무대행기관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "양천구에서 가장 가까운 곳."의 경우 recommend_closest_place("양천구")',
+    'target_places': parse_file_to_dict('./assets/agency_coordinates.txt'),
     'TOP': 3,
 }

@@ -235,45 +235,46 @@ class ReActAgentBarrack():
             verbose=self.verbose, 
             )
         
-    def invoke_agent(self, input, MAX_REPETITIONS=2):
-        # 특정 단어들이 문장 안에 있을 경우 그 문장을 삭제
-        def remove_error_sentences(text, n=3):
-            keywords = ['죄송', 'sorry', 'format', '포맷', '오류', 'error']
-            sentences = re.findall(r'([^.,!?]+[.,!?]?)', text)
-            check_limit = min(len(sentences), max(2, n))
-            
-            filtered_sentences = [
-                sentence for i, sentence in enumerate(sentences)
-                if i >= check_limit or not any(keyword in sentence for keyword in keywords)
-            ]
-            
-            result = ''.join(filtered_sentences).strip()
-            if result and not result.endswith(('.', '?', '!', '~')):
-                result += '.'
-            return result
-            
-        # 영어문장이 있을 경우 그 문장을 삭제
-        def remove_all_english_sentences(text):
-            sentences = re.split(r'(?<=[.!?])\s+', text)
-            filtered_sentences = [
-                sentence for sentence in sentences
-                if not re.match(r'^[\sA-Za-z0-9,.\'\"!?;:\-_()@#&]+$', sentence.strip())
-            ]
-            return ' '.join(filtered_sentences).strip()
+     # 특정 단어들이 문장 안에 있을 경우 그 문장을 삭제
+    def _remove_error_sentences(self, text, n=3):
+        keywords = ['죄송', 'sorry', 'format', '포맷', '오류', 'error']
+        sentences = re.findall(r'([^.,!?]+[.,!?]?)', text)
+        check_limit = min(len(sentences), max(2, n))
         
-        # 특정 단어들이 문장 안에 있을 경우 True를 리턴
-        def contains_keywords(text):
-            keywords = ['time limit', 'assist']
-            return any(keyword in text for keyword in keywords)
+        filtered_sentences = [
+            sentence for i, sentence in enumerate(sentences)
+            if i >= check_limit or not any(keyword in sentence for keyword in keywords)
+        ]
         
-        # 모든 문장들이 영어일 경우 True를 리턴
-        def is_all_english(text):
-            lines = text.splitlines()
-            for line in lines:
-                if not re.fullmatch(r'^[a-zA-Z0-9\s.,?!\'\"()-]*$', line):
-                    return False
-            return True
+        result = ''.join(filtered_sentences).strip()
+        if result and not result.endswith(('.', '?', '!', '~')):
+            result += '.'
+        return result
+        
+    # 영어문장이 있을 경우 그 문장을 삭제
+    def _remove_all_english_sentences(self, text):
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        filtered_sentences = [
+            sentence for sentence in sentences
+            if not re.match(r'^[\sA-Za-z0-9,.\'\"!?;:\-_()@#&]+$', sentence.strip())
+        ]
+        return ' '.join(filtered_sentences).strip()
+    
+    # 특정 단어들이 문장 안에 있을 경우 True를 리턴
+    def _contains_keywords(self, text):
+        keywords = ['time limit', 'assist']
+        return any(keyword in text for keyword in keywords)
+    
+    # 모든 문장들이 영어일 경우 True를 리턴
+    def _is_all_english(self, text):
+        lines = text.splitlines()
+        for line in lines:
+            if not re.fullmatch(r'^[a-zA-Z0-9\s.,?!\'\"()-]*$', line):
+                return False
+        return True
 
+        
+    def invoke_agent_legacy(self, input, MAX_REPETITIONS=2):
         self.input = input
         repetition_count = 0
         while repetition_count < (MAX_REPETITIONS + 1):
@@ -281,16 +282,16 @@ class ReActAgentBarrack():
             result = self.executor.invoke({"input": self.input})
             self.result = result
 
-            if contains_keywords(result.get('output')):
+            if self._contains_keywords(result.get('output')):
                 intermediate_steps = result.get('intermediate_steps', [])
                 log_list = []
                 log_len = []
                 for step in intermediate_steps:
                     log = step[0].log
-                    if ('Action Input: ' in log) or ('Question: ' in log) or is_all_english(log):
+                    if ('Action Input: ' in log) or ('Question: ' in log) or self._is_all_english(log):
                         continue
-                    log = remove_all_english_sentences(log)
-                    log = remove_error_sentences(log)
+                    log = self._remove_all_english_sentences(log)
+                    log = self._remove_error_sentences(log)
                     log_list.append(log)
                     log_len.append(len(log))
                 
@@ -302,7 +303,7 @@ class ReActAgentBarrack():
             else:
                 output = result.get('output')
 
-            if not output.replace(' ', '').replace('\n', '') or is_all_english(output):
+            if not output.replace(' ', '').replace('\n', '') or self._is_all_english(output):
                 end_time = time.time()
                 print(
                     f'repetition_count: {repetition_count} / {MAX_REPETITIONS}',
@@ -338,6 +339,42 @@ class ReActAgentBarrack():
         for idx, step in enumerate(reversed((self.result['intermediate_steps']))):
             print(f'step {idx}: {step[0].log}')
 
+    
+    def invoke_agent(self, input):
+        self.input = input
+        result = self.executor.invoke({"input": self.input})
+        self.result = result
+
+        if self._contains_keywords(result.get('output')):
+            print('Confirm the intermediate steps.')
+            intermediate_steps = result.get('intermediate_steps', [])
+            log_list = []
+            log_len = []
+            for step in intermediate_steps:
+                log = step[0].log
+                if ('Action Input: ' in log) or ('Question: ' in log) or self._is_all_english(log):
+                    continue
+                log = self._remove_all_english_sentences(log)
+                log = self._remove_error_sentences(log)
+                log_list.append(log)
+                log_len.append(len(log))
+            
+            if len(log_len) == 0:
+                print('The intermediate steps are all English sentences...')
+                output = ''
+            else:
+                max_len_index = log_len.index(max(log_len))
+                output = log_list[max_len_index]
+        else:
+            output = result.get('output')
+
+        self.output = output.replace('Thought: ', '').replace('; ', '. ')
+
+        if self.preset['memory'] == True:
+            self.memory.save_context(inputs={"human": self.input}, outputs={"ai": self.output})
+
+        return self.output
+
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')
-    print('2024.11.07.16:00')
+    print('2024.11.11.14:15')

@@ -72,6 +72,10 @@ def restart_agent(num):
         preset=presets.TOOL_PRESET_DIPLOMATIC,
     )
 
+    agent.make_tool_from_ClosestFinder(
+        preset=presets.TOOL_PRESET_AGENCY,
+    )
+
     agent.make_tool_from_DocRetriever(
         doc_path='assets/passport_qna.txt',
         name='passports_qna-tool',
@@ -91,10 +95,18 @@ def restart_agent(num):
     agent.make_tool_from_DocRetriever(
         doc_path='assets/passport_diplomatic_list.txt',
         name='diplomatic_list-tool',
-        description='영사관, 대사관에 대한 정보를 제시해야할 때 유용합니다.',
+        description='질문자가 해외에 있을 경우 영사관, 대사관에 대한 정보를 제시해야할 때 유용합니다.',
         chunk_size=350,
         chunk_overlap=50,
-        )
+    )
+
+    agent.make_tool_from_DocRetriever(
+        doc_path='assets/passport_agency_list.txt',
+        name='diplomatic_list-tool',
+        description='질문자가 국내에 있을 경우 여권사무대행기관에 대한 정보를 제시해야할 때 유용합니다.',
+        chunk_size=350,
+        chunk_overlap=50,
+    )
 
     agent.make_tool_from_DocRetriever(
         doc_path='assets/passport_laws_links.txt',
@@ -102,7 +114,7 @@ def restart_agent(num):
         description='여권에 관련된 법률 링크를 제시해야할 때 유용합니다.',
         chunk_size=250,
         chunk_overlap=50,
-        )
+    )
     
     agent.make_agent()
        
@@ -197,6 +209,9 @@ def bot_response(typeNum):
     # agent 가져오기
     chat_agent = chat_agents[userid][f'chat_agent{typeNum}']
     response = chat_agent.invoke_agent(user_message)
+
+    if response.strip() == "":
+        response = "죄송합니다. 말씀해주신 내용을 이해하지 못 했습니다. 조금 더 구체적인 상황 또는 위치 등의 정보를 알려주실 수 있으신가요?"
 
     # DB연결
     conn = mysql_db.connection
