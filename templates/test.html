@@ -32,7 +32,7 @@
         id="myIframe1" 
         src="" 
         width="100%"
-        height="510px"
+        height="600px"
         frameborder="0"
         allowfullscreen
         scrolling="no"
@@ -42,7 +42,7 @@
         id="myIframe2" 
         src="" 
         width="100%"
-        height="510px"
+        height="600px"
         frameborder="0"
         allowfullscreen
         scrolling="no"
@@ -52,7 +52,7 @@
         id="myIframe3" 
         src="" 
         width="100%"
-        height="510px"
+        height="600px"
         frameborder="0"
         allowfullscreen
         scrolling="no"
@@ -82,7 +82,7 @@
             if (userid) {
                 // Update the iframe src and make it visible
                 const iframe = document.getElementById('myIframe2');
-                iframe.src = `https://pino.international/survey/type1?userid=${userid}`;
+                iframe.src = `https://pino.international/survey/type2?userid=${userid}`;
                 iframe.style.display = "block"; // Show iframe
             } else {
                 alert("Please enter a UserID.");
@@ -96,7 +96,7 @@
             if (userid) {
                 // Update the iframe src and make it visible
                 const iframe = document.getElementById('myIframe3');
-                iframe.src = `https://pino.international/survey/type1?userid=${userid}`;
+                iframe.src = `https://pino.international/survey/type3?userid=${userid}`;
                 iframe.style.display = "block"; // Show iframe
             } else {
                 alert("Please enter a UserID.");
