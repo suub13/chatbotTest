@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>국내 Chat Type 3</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <div id="loading-message">로딩 중입니다... 잠시만 기다려 주세요.</div>
+    </div>
+
+    <div id="chat-box">
+        <div id="chat-header">
+            <div id="chat-title">국내 Type 3</div>
+            <button id="reload-button3" class="reload-button">↺</button>
+        </div>
+        <div id="messages3" class="messages"></div>
+        <div id="input-container">
+            <textarea id="chat-input3" class="chat-input" placeholder="메시지를 입력하세요..."></textarea>
+            <button id="send-button3" class="send-button">▲</button>
+        </div>
+    </div>
+
+    <!-- </div> -->
+    <script src="../static/js/script.js"></script>
+    <script>
+        setupEventListeners(3);
+        setupTextareaAdjustment(3);
+    </script>
+    <script src="https://kit.fontawesome.com/4f25788d48.js" crossorigin="anonymous"></script>
+</body>
+</html>

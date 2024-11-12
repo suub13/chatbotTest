@@ -5,17 +5,10 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector  # MySQL 데이터베이스 설정을 위한 모듈
 from openai import OpenAI
-
+from config import Config
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-
-# MySQL 설정
-app.config['MYSQL_HOST'] = 'mysql_db'
-app.config['MYSQL_USER'] = 'subyou'
-app.config['MYSQL_PASSWORD'] = 'root'
-app.config['MYSQL_DB'] = 'chatbot'
-
+app.secret_key = Config.SECRET_KEY
 
 mysql_db = MySQL(app)
 CORS(app)
@@ -32,10 +25,10 @@ def run_sql_script(script_path):
         sql_script = file.read()
 
     conn = mysql.connector.connect(
-        host=app.config['MYSQL_HOST'],
-        user=app.config['MYSQL_USER'],
-        password=app.config['MYSQL_PASSWORD'],
-        database=app.config['MYSQL_DB']
+        host=Config.MYSQL_HOST,
+        user=Config.MYSQL_USER,
+        password=Config.MYSQL_PASSWORD,
+        database=Config.MYSQL_DB
     )
 
     cursor = conn.cursor()
@@ -61,61 +54,87 @@ def restart_agent(num):
     from llm.react_agentbarrack import ReActAgentBarrack
     from llm import presets  
 
-    preset_list = [presets.PRESET_A, presets.PRESET_B, presets.PRESET_C]
+    preset_list = [presets.PRESET_A_IN, presets.PRESET_B_IN, presets.PRESET_C_IN, presets.PRESET_A_OUT, presets.PRESET_B_OUT, presets.PRESET_C_OUT]
 
     agent = ReActAgentBarrack(
         preset=preset_list[num-1],
         verbose = False,
     )
 
-    agent.make_tool_from_ClosestFinder(
-        preset=presets.TOOL_PRESET_DIPLOMATIC,
-    )
+    if num in [1,2,3]:
+        agent.make_tool_from_ClosestFinder(
+            preset=presets.TOOL_PRESET_AGENCY,
+        )
 
-    agent.make_tool_from_ClosestFinder(
-        preset=presets.TOOL_PRESET_AGENCY,
-    )
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_qna.txt',
+            name='passports_qna-tool',
+            description='여권 관련 질문에 대한 답변을 제시해야할 때 유용합니다.',
+            chunk_size=600,
+            chunk_overlap=100,
+        )
 
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/passport_qna.txt',
-        name='passports_qna-tool',
-        description='여권 관련 질문에 대한 답변을 제시해야할 때 유용합니다.',
-        chunk_size=600,
-        chunk_overlap=100,
-    )
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_petition_info.txt',
+            name='passport_petition_info-tool',
+            description='여권 최초 발급, 여권 재발급, 긴급여권, 여권 분실 신청 방법을 제시해야할 때 유용합니다.',
+            chunk_size=600,
+            chunk_overlap=120,
+        )
 
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/passport_petition_info.txt',
-        name='passport_petition_info-tool',
-        description='여권 최초 발급, 여권 재발급, 긴급여권, 여권 분실 신청 방법을 제시해야할 때 유용합니다.',
-        chunk_size=600,
-        chunk_overlap=120,
-    )
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_agency_list.txt',
+            name='diplomatic_list-tool',
+            description='한국에 있을 경우 여권사무대행기관에 대한 정보를 제시해야할 때 유용합니다.',
+            chunk_size=350,
+            chunk_overlap=50,
+            )
 
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/passport_diplomatic_list.txt',
-        name='diplomatic_list-tool',
-        description='질문자가 해외에 있을 경우 영사관, 대사관에 대한 정보를 제시해야할 때 유용합니다.',
-        chunk_size=350,
-        chunk_overlap=50,
-    )
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_laws_links.txt',
+            name='passport_laws_links-tool',
+            description='여권에 관련된 법률 링크를 제시해야할 때 유용합니다.',
+            chunk_size=250,
+            chunk_overlap=50,
+        )
+    else:
+        agent.make_tool_from_ClosestFinder(
+            preset=presets.TOOL_PRESET_DIPLOMATIC,
+        )
 
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/passport_agency_list.txt',
-        name='diplomatic_list-tool',
-        description='질문자가 국내에 있을 경우 여권사무대행기관에 대한 정보를 제시해야할 때 유용합니다.',
-        chunk_size=350,
-        chunk_overlap=50,
-    )
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_qna.txt',
+            name='passports_qna-tool',
+            description='여권 관련 질문에 대한 답변을 제시해야할 때 유용합니다.',
+            chunk_size=600,
+            chunk_overlap=100,
+        )
 
-    agent.make_tool_from_DocRetriever(
-        doc_path='assets/passport_laws_links.txt',
-        name='passport_laws_links-tool',
-        description='여권에 관련된 법률 링크를 제시해야할 때 유용합니다.',
-        chunk_size=250,
-        chunk_overlap=50,
-    )
-    
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_petition_info.txt',
+            name='passport_petition_info-tool',
+            description='여권 최초 발급, 여권 재발급, 긴급여권, 여권 분실 신청 방법을 제시해야할 때 유용합니다.',
+            chunk_size=600,
+            chunk_overlap=120,
+        )
+
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_diplomatic_list.txt',
+            name='diplomatic_list-tool',
+            description='한국 이외의 나라에 있을 경우, 영사관 또는 대사관에 대한 정보를 제시해야할 때 유용합니다.',
+            chunk_size=350,
+            chunk_overlap=50,
+            )
+
+        agent.make_tool_from_DocRetriever(
+            doc_path='assets/passport_laws_links.txt',
+            name='passport_laws_links-tool',
+            description='여권에 관련된 법률 링크를 제시해야할 때 유용합니다.',
+            chunk_size=250,
+            chunk_overlap=50,
+            )
+
+            
     agent.make_agent()
        
     return agent
@@ -128,7 +147,10 @@ def render_chatbot_page(typeNum):
     userid = request.args.get('userid')
     
     if userid:
-        return render_template(f'type{typeNum}.html', userid=userid)
+        if typeNum in [1,2,3]:
+            return render_template(f'type{typeNum}in.html', userid=userid)
+        else:
+            return render_template(f'type{typeNum-3}out.html', userid=userid)
     else:
         return jsonify({'error': '제공된 링크를 통해 접속해 주세요.'}), 400
     

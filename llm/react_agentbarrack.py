@@ -94,7 +94,7 @@ class ReActAgentBarrack():
         
         def recommend_closest_place_online(current_location):
             from geopy.distance import geodesic
-            import googlemaps
+            import googlemaps 
             maps = googlemaps.Client(key=presets.API_KYES['google_maps_api_key'])
             print('User Location: ', current_location)
 
@@ -237,7 +237,7 @@ class ReActAgentBarrack():
         
      # 특정 단어들이 문장 안에 있을 경우 그 문장을 삭제
     def _remove_error_sentences(self, text, n=3):
-        keywords = ['죄송', 'sorry', 'format', '포맷', '오류', 'error']
+        keywords = ['죄송', 'sorry', 'format', '포맷', '오류', 'error', '잘못된', ' It seems']
         sentences = re.findall(r'([^.,!?]+[.,!?]?)', text)
         check_limit = min(len(sentences), max(2, n))
         
@@ -273,7 +273,24 @@ class ReActAgentBarrack():
                 return False
         return True
 
+    # 한글로 번역 후 리턴
+    def _translate_to_korean(self, text, preset):
+        print('Proceed with the provided preset: ', preset['preset_name'])
+        from langchain_openai import ChatOpenAI
+        prompt = PromptTemplate(
+            template=preset['template'],
+            input_variables=["text"],
+            )
+        llm = ChatOpenAI(
+            model=preset['model_id'],
+            temperature=0,
+            openai_api_key=preset['openai_api_key'],
+            )
         
+        prompt_text = prompt.format(text=text)
+        translation = llm(prompt_text)
+        return translation.content.strip()
+
     def invoke_agent_legacy(self, input, MAX_REPETITIONS=2):
         self.input = input
         repetition_count = 0
@@ -346,14 +363,16 @@ class ReActAgentBarrack():
         self.result = result
 
         if self._contains_keywords(result.get('output')):
-            print('Confirm the intermediate steps.')
+            print('Confirm the intermediate steps...')
             intermediate_steps = result.get('intermediate_steps', [])
             log_list = []
             log_len = []
             for step in intermediate_steps:
-                log = step[0].log
-                if ('Action Input: ' in log) or ('Question: ' in log) or self._is_all_english(log):
+                log = self._remove_error_sentences(step[0].log)
+                if ('Action Input' in log) or ('Question' in log) or ('Thought' in log):
                     continue
+                if self._is_all_english(log):
+                    log = self._translate_to_korean(text=log, preset=presets.PRESET_TRANS2KOR)
                 log = self._remove_all_english_sentences(log)
                 log = self._remove_error_sentences(log)
                 log_list.append(log)
@@ -377,4 +396,4 @@ class ReActAgentBarrack():
 
 if __name__ == '__main__':
     print('class ReAct-Agent Barrack')
-    print('2024.11.11.14:15')
+    print('2024.11.12.14:45')

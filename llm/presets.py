@@ -1,5 +1,6 @@
 import ast
 import os
+import copy
 
 def parse_file_to_dict(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -54,14 +55,12 @@ PRESET_DEFAULT = {
     """,
 }
 
-
-# 요약
 PRESET_A = {
     'preset_name': 'PRESET_A',
     'model_id': 'gpt-4o',
     'openai_api_key': os.getenv('openai_api_key_a'),
-    'max_iterations': 8,
-    'max_execution_time': 10,
+    'max_iterations': 5,
+    'max_execution_time': None,
     'memory': True,
     'template': """
     Answer the following questions as best you can.
@@ -95,13 +94,12 @@ PRESET_A = {
     """,
 }
 
-# 장문
 PRESET_B = {
     'preset_name': 'PRESET_B',
     'model_id': 'gpt-4o',
     'openai_api_key': os.getenv('openai_api_key_b'),
-    'max_iterations': 8,
-    'max_execution_time': 10,
+    'max_iterations': 5,
+    'max_execution_time': None,
     'memory': True,
     'template': """
     Answer the following questions as best you can.
@@ -137,13 +135,12 @@ PRESET_B = {
     """
 }
 
-# 요약 질문
 PRESET_C = {
     'preset_name': 'PRESET_C',
     'model_id': 'gpt-4o',
     'openai_api_key': os.getenv('openai_api_key_c'),
-    'max_iterations': 8,
-    'max_execution_time': 12,
+    'max_iterations': 5,
+    'max_execution_time': None,
     'memory': True,
     'template': """
     Answer the following questions as best you can.
@@ -182,6 +179,28 @@ PRESET_C = {
     """,
 }
 
+PRESET_A_IN = copy.deepcopy(PRESET_A)
+PRESET_A_IN['preset_name'] = 'PRESET_A_IN'
+PRESET_A_IN['openai_api_key'] = os.getenv('openai_api_key_a_in')
+
+PRESET_B_IN = copy.deepcopy(PRESET_B)
+PRESET_B_IN['preset_name'] = 'PRESET_B_IN'
+PRESET_B_IN['openai_api_key'] = os.getenv('openai_api_key_b_in')
+
+PRESET_C_IN = copy.deepcopy(PRESET_C)
+PRESET_C_IN['preset_name'] = 'PRESET_C_IN'
+PRESET_C_IN['openai_api_key'] = os.getenv('openai_api_key_c_in')
+
+PRESET_A_OUT = copy.deepcopy(PRESET_A)
+PRESET_A_OUT['preset_name'] = 'PRESET_A_OUT'
+
+PRESET_B_OUT = copy.deepcopy(PRESET_B)
+PRESET_B_OUT['preset_name'] = 'PRESET_B_OUT'
+
+PRESET_C_OUT = copy.deepcopy(PRESET_C)
+PRESET_C_OUT['preset_name'] = 'PRESET_C_OUT'
+
+
 
 PRESET_ZS_DEFAULT = {
     'preset_name': 'PRESET_ZS_DEFAULT',
@@ -190,6 +209,19 @@ PRESET_ZS_DEFAULT = {
     'memory': False,
     'template': "You are a helpful assistant. Respond only in korean.",
 }
+
+
+PRESET_TRANS2KOR = {
+    'preset_name': 'PRESET_TRANS2KOR',
+    'model_id': 'gpt-4o',
+    'openai_api_key': os.getenv('openai_api_key_trans2kor'),
+    'template': """
+    Translate the following English text to Korean:
+    Text: {text}
+    """
+}
+
+
 
 TOOL_PRESET_JUNKYARD = {
     'preset_name': 'TOOL_PRESET_JUNKYARD',
@@ -204,15 +236,15 @@ TOOL_PRESET_JUNKYARD = {
 TOOL_PRESET_DIPLOMATIC = {
     'preset_name': 'TOOL_PRESET_DIPLOMATIC',
     'tool_preset_name': 'find_closet_diplomatic-tool',
-    'description': '해외에 있을 경우, 현재 위치에서 가장 가까운 영사관 또는 대사관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "가마쿠라시에서 가장 가까운 곳."의 경우 recommend_closest_place("가마쿠라시")',
+    'description': 'The questioner is OUT OF THE COUNTRY, this tool shows you the closest consulate or embassy to your location. Call in the correct format: recommend_closest_place(current_location: str) 예: "가마쿠라시에서 가장 가까운 곳."의 경우 recommend_closest_place("가마쿠라시")',
     'target_places': parse_file_to_dict('./assets/diplomatic_coordinates.txt'),
     'TOP': 3,
 }
 
 TOOL_PRESET_AGENCY = {
-    'preset_name': 'TOOL_PRESET_DIPLOMATIC',
-    'tool_preset_name': 'find_closet_diplomatic-tool',
-    'description': '국내(한국)에 있을 경우, 현재 위치에서 가장 가까운 여권사무대행기관을 알려주는 도구입니다. 정확한 형식으로 호출하세요: recommend_closest_place(current_location: str) 예: "양천구에서 가장 가까운 곳."의 경우 recommend_closest_place("양천구")',
+    'preset_name': 'TOOL_PRESET_AGENCY',
+    'tool_preset_name': 'find_closet_agency-tool',
+    'description': 'The questioner is IN THE COUNTRY, this tool shows you the closest passport agency to your location. Call in the correct format: recommend_closest_place(current_location: str) 예: "양천구에서 가장 가까운 곳."의 경우 recommend_closest_place("양천구")',
     'target_places': parse_file_to_dict('./assets/agency_coordinates.txt'),
     'TOP': 3,
 }
