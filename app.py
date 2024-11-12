@@ -10,6 +10,12 @@ from config import Config
 app = Flask(__name__)
 app.secret_key = Config.SECRET_KEY
 
+# MySQL 설정
+app.config['MYSQL_HOST'] = 'mysql_db'
+app.config['MYSQL_USER'] = 'subyou'
+app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_DB'] = 'chatbot'
+
 mysql_db = MySQL(app)
 CORS(app)
 
@@ -25,10 +31,10 @@ def run_sql_script(script_path):
         sql_script = file.read()
 
     conn = mysql.connector.connect(
-        host=Config.MYSQL_HOST,
-        user=Config.MYSQL_USER,
-        password=Config.MYSQL_PASSWORD,
-        database=Config.MYSQL_DB
+        host=app.config['MYSQL_HOST'],
+        user=app.config['MYSQL_USER'],
+        password=app.config['MYSQL_PASSWORD'],
+        database=app.config['MYSQL_DB']
     )
 
     cursor = conn.cursor()
@@ -189,7 +195,10 @@ def create_chat_agent(userid, typeNum):
 conversation_types = {
     1: 'conv1',
     2: 'conv2',
-    3: 'conv3'
+    3: 'conv3',
+    4: 'conv4',
+    5: 'conv5',
+    6: 'conv6'
 }
 
 @app.route('/api/userMessage<int:typeNum>', methods=['POST'])
@@ -264,11 +273,11 @@ def bot_response(typeNum):
 @app.route('/api/chatReload/<int:typeNum>', methods=['POST'])
 def chat_reload(typeNum):
 
-    if typeNum not in [1, 2, 3]:
+    if typeNum not in [1, 2, 3, 4, 5, 6]:
         return jsonify({'error': 'Invalid chatbot number'}), 400
     
     userid = request.json.get('userid')
-
+    print(chat_agents)
     chat_agents[userid][f'chat_agent{typeNum}'] = restart_agent(typeNum)
 
     return '', 204
