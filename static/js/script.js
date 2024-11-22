@@ -13,38 +13,13 @@ function setupEventListeners(typeNum) {
 // 처음 로딩 페이지 추가하려면 아래 function 에서 comment 처리 된 부분 해지 해야 함.
 function startLoadingModel(typeNum) {
     sessionStorage.clear();
-    toggleInput(typeNum, false); 
-    document.getElementById('loading-overlay').style.display = 'block';
 
     const urlParams = new URLSearchParams(window.location.search);
     const userid = urlParams.get('userid'); 
 
     sessionStorage.setItem('userid',userid); 
 
-    fetch('/create_agent', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ userid, typeNum }) // Include both userid and typeNum in the request body
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            alert(data.error);
-        } else {
-            console.log(data.message);
-            // Enable chat input once the agent is ready
-            toggleInput(typeNum, true);
-            document.getElementById('loading-overlay').style.display = 'none';
-            displayMessage(typeNum, 'start bot', "저는 여권 관련 상담 도우미입니다. &#128512; \n현재 위치하신 곳 또는 처한 상황에 대해 구체적으로 말씀해 주시면 더욱더 정확한 도움을 드릴 수 있습니다.");
-        }
-    })
-    .catch(error => {
-        console.error('Error creating chat agent:', error);
-        document.getElementById('loading-overlay').style.display = 'none';
-    });
+    displayMessage(typeNum, 'start bot', "저는 여권 관련 상담 도우미입니다. &#128512; \n현재 위치하신 곳 또는 처한 상황에 대해 구체적으로 말씀해 주시면 더욱더 정확한 도움을 드릴 수 있습니다.");
 }
 
 
@@ -62,7 +37,6 @@ function sendMessage(typeNum) {
     const message = inputField.value.trim();
     if (message !== '') {
         displayMessage(typeNum, 'user', message);
-        userMessageDB(userid, typeNum, message);
         inputField.value = ''; // inputField 리셋
         toggleInput(typeNum, false); // 입력 필드 비활성화
         getChatbotResponse(userid, typeNum, message); // 챗봇 응답 요청
@@ -98,43 +72,9 @@ function displayMessage(typeNum, sender, message, messageId = null, isTyping = f
 }
 
 
-async function userMessageDB(userid, typeNum, userMessage) {
-    let conv_id = sessionStorage.getItem(`convType${typeNum}`);
-
-    try {
-        const response = await fetch(`/api/userMessage${typeNum}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ 
-                message: userMessage,
-                userid: userid,
-                conv_id: conv_id
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        // Extract conv_id from response
-        const data = await response.json();
-        conv_id = data.conv_id;
-
-        // Save conv_id to sessionStorage
-        sessionStorage.setItem(`convType${typeNum}`, conv_id);
-
-    } catch (error) {
-        console.error('Error fetching Python function result:', error);
-    }
-}
 
 
 function getChatbotResponse(userid, typeNum, userMessage) {
-    let conv_id = sessionStorage.getItem(`convType${typeNum}`);
-
     // 1. 로딩 메시지 ('...') 표시
     const loadingMessageId = `loading-${Date.now()}`;  // 고유 메시지 ID 생성
     displayMessage(typeNum, 'bot', '', loadingMessageId, true);  // 로딩 메시지 추가
@@ -147,8 +87,7 @@ function getChatbotResponse(userid, typeNum, userMessage) {
         credentials: 'include',
         body: JSON.stringify({ 
             message: userMessage,
-            userid: userid,
-            conv_id: conv_id,
+            userid: userid
          }),
     })
     .then(response => {
@@ -169,8 +108,6 @@ function getChatbotResponse(userid, typeNum, userMessage) {
 
         toggleInput(typeNum, true); // 입력 필드 활성화
 
-        conv_id = data.conv_id;
-        sessionStorage.setItem(`convType${typeNum}`, conv_id);
     })
     .catch(error => {
         console.error('Error:', error);
@@ -179,40 +116,46 @@ function getChatbotResponse(userid, typeNum, userMessage) {
 
 async function reloadChat(typeNum) {
     userid = sessionStorage.getItem('userid');
-    console.log(`Reload button clicked for chatbot ${typeNum}. Messages are being reloaded.`);
+    if (!userid) {
+        console.error('User ID is missing in session.');
+        alert('세션에 User ID가 없습니다. 페이지를 새로고침하세요.');
+        return;
+    }
     document.getElementById('loading-overlay').style.display = 'block';
 
-    // 메시지 영역 리셋
-    const messagesContainer = document.getElementById(`messages${typeNum}`);
-    
+    // 입력 비활성화 및 메시지 리셋
     toggleInput(typeNum, false);
-    await callReload(userid, typeNum);
+    const messagesContainer = document.getElementById(`messages${typeNum}`);
     messagesContainer.innerHTML = '';
-    toggleInput(typeNum, true);
 
-    sessionStorage.removeItem(`convType${typeNum}`);
-    document.getElementById('loading-overlay').style.display = 'none';
-    displayMessage(typeNum, 'start bot', "저는 여권 관련 상담 도우미입니다. &#128512; \n현재 위치하신 곳 또는 처한 상황에 대해 구체적으로 말씀해 주시면 더욱더 정확한 도움을 드릴 수 있습니다.");
+    try {
+        // API 호출
+        await callReload(userid, typeNum);
+        displayMessage(typeNum, 'start bot', 
+            "저는 여권 관련 상담 도우미입니다. 😊\n현재 위치하신 곳 또는 처한 상황에 대해 구체적으로 말씀해 주시면 더욱 정확한 도움을 드릴 수 있습니다."
+        );
+    } catch (error) {
+        console.error('Error during reload:', error);
+        alert('챗봇을 다시 로드하는 중 오류가 발생했습니다.');
+    } finally {
+        // 입력 활성화 및 로딩 종료
+        toggleInput(typeNum, true);
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
 }
 
-async function callReload(userid, typeNum) {
-    try {
-        const response = await fetch(`/api/chatReload/${typeNum}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ 
-                userid: userid
-             }),
-        });
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-    } catch (error) {
-        console.error('Error fetching Python function result:', error);
+async function callReload(userid, typeNum) {
+    const response = await fetch(`/api/chatReload/${typeNum}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userid }),
+    });
+
+    if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(`Reload failed: ${errorMessage}`);
     }
 }
 
@@ -249,81 +192,75 @@ function setupTextareaAdjustment(typeNum) {
 }
 
 
-
-
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
     const target = event.target;
 
     if (target.classList.contains('fa-thumbs-up') || target.classList.contains('fa-thumbs-down')) {
-        const feedback = target.classList.contains('fa-thumbs-up') ? 'up' : 'down';
-        const messageId = target.closest('.feedback').getAttribute('data-message-id');
         const feedbackContainer = target.closest('.feedback');
-        const isSelected = target.classList.contains('selected');
+        const messageId = feedbackContainer?.getAttribute('data-message-id');
+        const isThumbsUp = target.classList.contains('fa-thumbs-up');
+        const isThumbsDown = target.classList.contains('fa-thumbs-down');
+        const selectedFeedback = getSelectedFeedback(feedbackContainer);
 
         if (messageId) {
-            if (feedback === 'up'){
-                // up 버튼 더이상 누를 수 없게 
-                feedbackContainer.querySelector('.fa-thumbs-up').classList.add('disabled');
-                // up 버튼 선택
-                feedbackContainer.querySelector('.fa-thumbs-up').classList.add('selected');
-
-                // down 버튼 누름 가능
-                feedbackContainer.querySelector('.fa-thumbs-down').classList.remove('disabled');
-                // 선택 해제
-                feedbackContainer.querySelector('.fa-thumbs-down').classList.remove('selected');
-
+            if (
+                (isThumbsUp && selectedFeedback === 'UP') ||
+                (isThumbsDown && selectedFeedback === 'DOWN')
+            ) {
+                // If the same button is clicked again, deselect it
+                toggleFeedbackButtons(feedbackContainer, 'NONE');
+                sendFeedback(messageId, 'NONE'); // Send null feedback to indicate deselection
             } else {
-                // up 버튼 더이상 누를 수 없게 
-                feedbackContainer.querySelector('.fa-thumbs-down').classList.add('disabled');
-                // up 버튼 선택
-                feedbackContainer.querySelector('.fa-thumbs-down').classList.add('selected');
-
-                // down 버튼 누름 가능
-                feedbackContainer.querySelector('.fa-thumbs-up').classList.remove('disabled');
-                // 선택 해제
-                feedbackContainer.querySelector('.fa-thumbs-up').classList.remove('selected');
-
+                // Otherwise, select the clicked button
+                const feedback = isThumbsUp ? 'UP' : 'DOWN';
+                toggleFeedbackButtons(feedbackContainer, feedback);
+                sendFeedback(messageId, feedback);
             }
-            sendFeedback(messageId, feedback);
         }
     }
 });
 
+function getSelectedFeedback(container) {
+    const upButton = container.querySelector('.fa-thumbs-up');
+    const downButton = container.querySelector('.fa-thumbs-down');
+
+    if (upButton.classList.contains('selected')) {
+        return 'UP';
+    } else if (downButton.classList.contains('selected')) {
+        return 'DOWN';
+    } else {
+        return null; // No feedback is selected
+    }
+}
+
+function toggleFeedbackButtons(container, feedback) {
+    const upButton = container.querySelector('.fa-thumbs-up');
+    const downButton = container.querySelector('.fa-thumbs-down');
+
+    if (feedback === 'UP') {
+        upButton.classList.add('selected');
+        downButton.classList.remove('selected');
+    } else if (feedback === 'DOWN') {
+        downButton.classList.add('selected');
+        upButton.classList.remove('selected');
+    } else {
+        // Deselect both buttons
+        upButton.classList.remove('selected');
+        downButton.classList.remove('selected');
+    }
+}
 
 async function sendFeedback(messageId, feedback) {
     try {
         const response = await fetch('/api/feedback', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ message_id: messageId, feedback: feedback }),
+            body: JSON.stringify({ message_id: messageId, feedback }),
         });
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        if (!response.ok) throw new Error('Failed to send feedback');
     } catch (error) {
-        console.error('Error sending feedback:', error);
-    }
-}
-
-async function removeFeedback(messageId) {
-    try {
-        const response = await fetch('/api/feedback/remove', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ message_id: messageId }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-    } catch (error) {
-        console.error('Error removing feedback:', error);
+        console.error('Error:', error);
     }
 }
