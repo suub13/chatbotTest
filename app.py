@@ -93,7 +93,6 @@ def chat_reload(typeNum):
 
     # 결과 처리
     if response.get('response') == 1:
-        print("잘 처리됨")
         return '', 204
     return jsonify({'error': 'Thread memory clearance unsuccessful'}), 500
 

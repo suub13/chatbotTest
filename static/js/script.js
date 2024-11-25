@@ -131,14 +131,14 @@ async function reloadChat(typeNum) {
     try {
         // API 호출
         await callReload(userid, typeNum);
+    } catch (error) {
+        console.error('Error during reload:', error);
+        // alert('이미 챗이 리로드 ');
+    } finally {
+        // 입력 활성화 및 로딩 종료
         displayMessage(typeNum, 'start bot', 
             "저는 여권 관련 상담 도우미입니다. 😊\n현재 위치하신 곳 또는 처한 상황에 대해 구체적으로 말씀해 주시면 더욱 정확한 도움을 드릴 수 있습니다."
         );
-    } catch (error) {
-        console.error('Error during reload:', error);
-        alert('챗봇을 다시 로드하는 중 오류가 발생했습니다.');
-    } finally {
-        // 입력 활성화 및 로딩 종료
         toggleInput(typeNum, true);
         document.getElementById('loading-overlay').style.display = 'none';
     }
