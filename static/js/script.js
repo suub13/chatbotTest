@@ -24,7 +24,8 @@ function startLoadingModel(typeNum) {
 
 
 function handleKeyDown(event, typeNum) {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    const sendButton = document.getElementById(`send-button${typeNum}`);
+    if (event.key === 'Enter' && !event.shiftKey && sendButton.disabled != true) {
         event.preventDefault(); // Prevent new line
         sendMessage(typeNum);
     }
@@ -40,6 +41,7 @@ function sendMessage(typeNum) {
         inputField.value = ''; // inputField 리셋
         toggleInput(typeNum, false); // 입력 필드 비활성화
         getChatbotResponse(userid, typeNum, message); // 챗봇 응답 요청
+        inputField.focus();
     }
 }
 
@@ -107,7 +109,6 @@ function getChatbotResponse(userid, typeNum, userMessage) {
         }
 
         toggleInput(typeNum, true); // 입력 필드 활성화
-
     })
     .catch(error => {
         console.error('Error:', error);
@@ -163,8 +164,8 @@ function toggleInput(typeNum, enable) {
     const sendButton = document.getElementById(`send-button${typeNum}`);
     sendButton.disabled = !enable; // 버튼 활성화/비활성화
 
-    const inputField = document.getElementById(`chat-input${typeNum}`);
-    inputField.disabled = !enable;
+    // const inputField = document.getElementById(`chat-input${typeNum}`);
+    // inputField.disabled = !enable;
 }
 
 function adjustTextareaHeight(textarea) {
