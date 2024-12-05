@@ -11,7 +11,7 @@ CORS(app)
 
 from flask import send_from_directory
 
-base_url = "https://1f96-58-122-202-175.ngrok-free.app/"
+base_url = "https://b149-58-122-202-175.ngrok-free.app/"
 
 @app.route('/favicon.ico')
 def favicon():
